@@ -1,0 +1,469 @@
+---
+title: 'Import Playlists'
+description: 'Import and synchronize playlists from NetEase Cloud Music and QQ Music to BBPlayer'
+---
+
+BBPlayer supports importing playlists from popular Chinese music streaming services, automatically matching tracks to available content on Bilibili.
+
+## Supported Platforms
+
+Import playlists from these external music services:
+
+<Tabs>
+  <Tab title="NetEase Cloud Music">
+    **网易云音乐** (music.163.com)
+    
+    - Public playlists
+    - Personal playlists (requires login)
+    - Curated/editorial playlists
+    - User-generated playlists
+    
+    <Info>
+    NetEase Cloud Music is one of China's largest music streaming platforms with extensive metadata and high-quality playlists.
+    </Info>
+  </Tab>
+  
+  <Tab title="QQ Music">
+    **QQ音乐** (y.qq.com)
+    
+    - Public playlists
+    - Personal playlists
+    - Official playlists
+    - Genre and mood playlists
+    
+    <Info>
+    QQ Music integration provides access to Tencent's vast music library and popular curated collections.
+    </Info>
+  </Tab>
+</Tabs>
+
+## Import Methods
+
+There are two ways to import external playlists into BBPlayer:
+
+### Method 1: URL Import
+
+Quickly import by pasting a playlist URL.
+
+<Steps>
+  <Step title="Copy Playlist URL">
+    From NetEase or QQ Music app/website:
+    - Open the playlist you want to import
+    - Tap the share button
+    - Copy the playlist link
+    
+    **Supported URL formats:**
+    ```
+    NetEase: https://music.163.com/#/playlist?id=123456789
+    QQ Music: https://y.qq.com/n/ryqq/playlist/123456789
+    ```
+  </Step>
+  
+  <Step title="Open Import in BBPlayer">
+    Navigate to **Library > Playlists** and tap the **+** button, then select **"从外部导入"** (Import from External).
+  </Step>
+  
+  <Step title="Paste URL">
+    Paste the playlist URL into the text field. BBPlayer will:
+    - Parse the URL to extract playlist ID and source
+    - Validate the playlist exists
+    - Fetch playlist metadata
+  </Step>
+  
+  <Step title="Start Matching">
+    Tap **"开始匹配"** (Start Matching) to begin the import process.
+  </Step>
+</Steps>
+
+### Method 2: Direct Playlist Sync
+
+For more advanced users, sync playlists programmatically:
+
+```typescript
+// Parse playlist URL (apps/mobile/src/lib/utils/playlistUrlParser.ts:1-22)
+export const parseExternalPlaylistInfo = (text: string) => {
+  // NetEase Music
+  if (text.includes('music.163.com')) {
+    const result = /id=(\d+)/.exec(text)
+    if (result?.[1]) {
+      return { id: result[1], source: 'netease' }
+    }
+  }
+  
+  // QQ Music
+  if (text.includes('.qq.com')) {
+    const result = /id=(\d+)/.exec(text)
+    if (result?.[1]) {
+      return { id: result[1], source: 'qq' }
+    }
+  }
+  
+  return null
+}
+```
+
+## Matching Process
+
+BBPlayer uses an intelligent matching algorithm to find corresponding tracks on Bilibili.
+
+### How Matching Works
+
+<Steps>
+  <Step title="Fetch External Playlist">
+    BBPlayer retrieves the complete playlist from the external service:
+    - Track titles
+    - Artist names
+    - Album information
+    - Track duration
+    - Cover artwork
+  </Step>
+  
+  <Step title="Search Bilibili">
+    For each track, BBPlayer searches Bilibili using:
+    ```typescript
+    const keyword = `${track.title} ${track.artist}`
+    const results = await bilibiliApi.search(keyword)
+    ```
+    
+    <Info>
+    The search intentionally **does not use cookies** to avoid personalized results that might reduce match accuracy.
+    </Info>
+  </Step>
+  
+  <Step title="Score Candidates">
+    Each search result is scored based on:
+    - **Title similarity** (Longest Common Subsequence algorithm)
+    - **Artist name match**
+    - **Duration difference** (within 10% tolerance)
+    - **Video properties** (audio-only preferred)
+    
+    ```typescript
+    // Scoring logic from apps/mobile/src/lib/services/externalPlaylistService.ts
+    const matchScore = calculateMatchScore({
+      titleSimilarity: lcsScore(track.title, video.title),
+      artistMatch: video.author.includes(track.artist),
+      durationDiff: Math.abs(track.duration - video.duration),
+      videoQuality: video.hasAudio && !video.hasVideo
+    })
+    ```
+  </Step>
+  
+  <Step title="Select Best Match">
+    The candidate with the highest score above the confidence threshold is selected. If no match meets the threshold, the track is marked as **"未匹配"** (No match).
+  </Step>
+</Steps>
+
+### Match Quality Indicators
+
+The import UI shows match confidence:
+
+<Accordion title="High Confidence (绿色)">
+  - Score > 0.85
+  - Very likely correct match
+  - Title and artist closely match
+  - Duration within 5% of original
+</Accordion>
+
+<Accordion title="Medium Confidence (黄色)">
+  - Score 0.65 - 0.85
+  - Probable match but verify manually
+  - Some metadata differences
+  - Consider alternative if available
+</Accordion>
+
+<Accordion title="Low Confidence (橙色)">
+  - Score 0.5 - 0.65
+  - Weak match, likely incorrect
+  - Significant metadata differences
+  - Review and replace recommended
+</Accordion>
+
+<Accordion title="No Match (红色/灰色)">
+  - Score < 0.5 or no results
+  - Track not available on Bilibili
+  - Will be excluded from import
+  - Manual search required
+</Accordion>
+
+## Review and Adjust Matches
+
+Before finalizing the import, review all matched tracks.
+
+### Match Review Interface
+
+The external playlist sync screen shows:
+
+<Tabs>
+  <Tab title="Matched Tracks List">
+    For each track:
+    - **Original**: Track name from external service
+    - **Matched**: Bilibili video title
+    - **Match score**: Confidence indicator
+    - **Preview**: Tap to verify it's correct
+  </Tab>
+  
+  <Tab title="Manual Override">
+    If a match is incorrect:
+    1. Tap the track row
+    2. Select **"重新搜索"** (Search Again)
+    3. Choose from alternative results
+    4. Or manually search with custom keywords
+  </Tab>
+  
+  <Tab title="Exclude Tracks">
+    Uncheck tracks you don't want to import:
+    - Poor quality matches
+    - Duplicates
+    - Tracks you already have
+  </Tab>
+</Tabs>
+
+### Bulk Actions
+
+<Note>
+Use bulk actions to quickly manage large playlists:
+- **Select All Good Matches**: Auto-select all high-confidence matches
+- **Deselect No Matches**: Remove all unmatched tracks
+- **Re-match All Low Scores**: Re-run matching for weak results
+</Note>
+
+## Saving Imported Playlist
+
+Once satisfied with the matches, save the playlist to your library.
+
+<Steps>
+  <Step title="Configure Playlist Details">
+    BBPlayer pre-fills:
+    - **Title**: From original playlist
+    - **Description**: From original playlist
+    - **Cover**: From original playlist
+    
+    You can edit any of these fields before saving.
+  </Step>
+  
+  <Step title="Save as Local Playlist">
+    Tap **"保存"** (Save). BBPlayer will:
+    - Create artists in local database
+    - Create track entries for all matched videos
+    - Create the playlist
+    - Add tracks to playlist in original order
+    
+    ```typescript
+    // Save process (apps/mobile/src/lib/facades/syncExternalPlaylist.ts:36-161)
+    public saveMatchedPlaylist(
+      playlistInfo: { title, coverUrl, description },
+      matchResults: MatchResult[]
+    ) {
+      return db.transaction(async (tx) => {
+        // 1. Create/find artists
+        const artistsMap = await artistSvc.findOrCreateManyRemoteArtists(...)
+        
+        // 2. Create tracks
+        const tracksMap = await trackSvc.findOrCreateManyTracks(...)
+        
+        // 3. Create playlist
+        const playlistId = await playlistSvc.createPlaylist(...)
+        
+        // 4. Add tracks to playlist
+        await playlistSvc.addManyTracksToLocalPlaylist(playlistId, trackIds)
+        
+        return playlistId
+      })
+    }
+    ```
+  </Step>
+  
+  <Step title="Playlist Ready">
+    The imported playlist now appears in your library and can be:
+    - Played immediately
+    - Edited (add/remove tracks)
+    - Synced to BBPlayer Cloud
+    - Downloaded for offline playback
+  </Step>
+</Steps>
+
+## Import Statistics
+
+After import completion, BBPlayer displays:
+
+- **Total tracks** in original playlist
+- **Successfully matched** tracks
+- **Match rate** percentage
+- **Failed matches** count
+- **Import duration**
+
+<Tip>
+A match rate above 80% is considered excellent. Below 50% suggests the content may not be well-represented on Bilibili.
+</Tip>
+
+## Advanced Matching Configuration
+
+Customize matching behavior in **Settings > Import**:
+
+### Match Sensitivity
+
+<Tabs>
+  <Tab title="Strict (Recommended)">
+    - Higher confidence threshold (0.75)
+    - Fewer matches but more accurate
+    - Reduces false positives
+  </Tab>
+  
+  <Tab title="Balanced (Default)">
+    - Medium threshold (0.65)
+    - Good balance of quantity and quality
+    - Suitable for most playlists
+  </Tab>
+  
+  <Tab title="Lenient">
+    - Lower threshold (0.50)
+    - More matches but may include incorrect ones
+    - Requires manual review
+  </Tab>
+</Tabs>
+
+### Search Options
+
+- **Duration tolerance**: ±5%, ±10%, or ±15%
+- **Artist match weight**: How much to prioritize artist name
+- **Prefer audio-only**: Favor audio-only videos over regular videos
+- **Skip covers/live**: Exclude cover versions and live performances
+
+## Worker-Based Processing
+
+Large playlist imports use a background worker for better performance.
+
+```typescript
+// Playlist sync worker (apps/mobile/src/lib/workers/PlaylistSyncWorker.ts)
+export class PlaylistSyncWorker {
+  async processPlaylist(externalPlaylistId: string, source: 'netease' | 'qq') {
+    // Fetch playlist metadata
+    const playlist = await this.fetchExternalPlaylist(externalPlaylistId, source)
+    
+    // Match tracks in batches
+    const batchSize = 10
+    const results = []
+    
+    for (let i = 0; i < playlist.tracks.length; i += batchSize) {
+      const batch = playlist.tracks.slice(i, i + batchSize)
+      const batchResults = await Promise.all(
+        batch.map(track => this.matchTrack(track))
+      )
+      results.push(...batchResults)
+      
+      // Report progress
+      this.reportProgress(results.length, playlist.tracks.length)
+    }
+    
+    return results
+  }
+}
+```
+
+<Info>
+Batch processing prevents UI freezing and provides real-time progress updates during large imports.
+</Info>
+
+## Troubleshooting
+
+### Import Gets Stuck
+
+- Check internet connection
+- Verify external service is accessible
+- Try a smaller playlist first
+- Restart the app and try again
+
+### Low Match Rate
+
+<Steps>
+  <Step title="Check Content Type">
+    Some music genres are poorly represented on Bilibili:
+    - Western pop music may have fewer matches
+    - Chinese music generally matches better
+    - Niche genres may require manual search
+  </Step>
+  
+  <Step title="Adjust Settings">
+    - Increase duration tolerance
+    - Lower match threshold
+    - Disable artist name requirement
+  </Step>
+  
+  <Step title="Manual Matching">
+    For important tracks that didn't match:
+    - Search manually in BBPlayer
+    - Add to playlist directly
+    - Update match settings for future imports
+  </Step>
+</Steps>
+
+### "Playlist Not Found" Error
+
+- Verify the playlist is public (not private)
+- Check URL is correct and complete
+- Some playlists may be region-restricted
+- Try accessing in a web browser first
+
+### Duplicate Tracks After Import
+
+- BBPlayer detects existing tracks by unique key
+- If duplicates appear, they may be different versions
+- Use playlist cleanup tools to merge duplicates
+
+### Import Fails Midway
+
+- Progress is saved - you can resume
+- Check device storage space
+- Verify app has database write permission
+- Large playlists (>500 tracks) may timeout
+
+## Best Practices
+
+<Tip>
+**For Optimal Import Results:**
+
+1. **Start Small**: Test with a small playlist (10-20 tracks) first
+2. **Review Matches**: Always review before saving, especially for important playlists
+3. **Use High-Quality Sources**: Well-curated playlists match better
+4. **Check Metadata**: Playlists with accurate metadata improve matching
+5. **Internet Connection**: Use Wi-Fi for large imports
+6. **Regular Updates**: Re-sync periodically to catch new uploads
+</Tip>
+
+## API Integration
+
+Developers can use the external playlist service programmatically:
+
+```typescript
+import { externalPlaylistService } from '@/lib/services/externalPlaylistService'
+
+// Match a single track
+const result = await externalPlaylistService.matchSingleTrack({
+  title: 'Song Title',
+  artist: 'Artist Name',
+  duration: 240  // seconds
+})
+
+if (result.isOk()) {
+  const match = result.value
+  console.log('Matched:', match.matchedVideo)
+  console.log('Confidence:', match.confidence)
+}
+
+// Match entire playlist
+const playlistResults = await externalPlaylistService.matchPlaylist(
+  playlistId,
+  'netease'  // or 'qq'
+)
+```
+
+## Future Enhancements
+
+Planned features for playlist import:
+
+- **Spotify integration**: Import from Spotify playlists
+- **Apple Music support**: Connect with Apple Music library
+- **Auto-sync**: Automatically update imported playlists
+- **Smart recommendations**: Suggest Bilibili alternatives for no-match tracks
+- **Batch import**: Import multiple playlists simultaneously
+- **Export matches**: Save matching results for later use

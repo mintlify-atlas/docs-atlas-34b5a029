@@ -1,0 +1,209 @@
+---
+title: Creating and Managing Playlists
+description: Learn how to create, organize, and manage your music playlists in BBPlayer
+---
+
+BBPlayer offers powerful playlist management features that let you organize your Bilibili audio collection. This guide covers creating local playlists, importing external playlists, and managing playlist content.
+
+## Creating a New Playlist
+
+<Steps>
+  <Step title="Open the Playlist Menu">
+    Navigate to the **Library** tab and tap the **+** icon in the playlist section header.
+  </Step>
+  
+  <Step title="Select 'New Playlist'">
+    From the menu, choose **新建播放列表** (New Playlist).
+  </Step>
+  
+  <Step title="Enter Playlist Details">
+    Fill in the playlist information:
+    - **Title** (required): Give your playlist a memorable name
+    - **Description** (optional): Add details about the playlist's theme or purpose
+    - **Cover Image** (optional): Tap the image icon to select a custom cover from your device
+    
+    <Tip>
+      Custom cover images are stored locally in the app's `covers` directory for quick access.
+    </Tip>
+  </Step>
+  
+  <Step title="Create the Playlist">
+    Tap **确定** (Confirm) to create your playlist. If you selected "redirect to new playlist," you'll be taken directly to the new playlist page.
+  </Step>
+</Steps>
+
+## Adding Tracks to Playlists
+
+There are multiple ways to add tracks to your playlists:
+
+### From Track Menu
+
+1. Tap the three-dot menu (⋮) next to any track
+2. Select **添加到播放列表** (Add to Playlist)
+3. Choose one or more playlists from the list
+4. Tap confirm to add the track
+
+<Note>
+  Tracks are added to the end of local playlists using fractional indexing, which allows for efficient reordering without affecting other tracks.
+</Note>
+
+### Batch Adding Tracks
+
+<Steps>
+  <Step title="Enter Selection Mode">
+    Long-press on any track in a playlist or library view to enter selection mode.
+  </Step>
+  
+  <Step title="Select Multiple Tracks">
+    Tap additional tracks to select them. Use the "Select All" or "Invert Selection" buttons in the top bar for bulk operations.
+  </Step>
+  
+  <Step title="Add to Playlist">
+    Tap the playlist icon in the action bar, then choose the destination playlist(s).
+  </Step>
+</Steps>
+
+## Reordering Playlist Tracks
+
+Local playlists support drag-and-drop reordering:
+
+1. Open your local playlist
+2. Long-press and hold a track item
+3. Drag the track to your desired position
+4. Release to drop the track in the new position
+
+The app uses **fractional indexing** to maintain sort order efficiently without renumbering all tracks.
+
+## Removing Tracks from Playlists
+
+### Remove Single Track
+
+1. Tap the menu (⋮) next to the track
+2. Select **从播放列表中移除** (Remove from Playlist)
+3. Confirm the removal
+
+### Remove Multiple Tracks
+
+1. Enter selection mode by long-pressing a track
+2. Select all tracks you want to remove
+3. Tap the remove icon in the top action bar
+4. Confirm batch removal
+
+<Tip>
+  Removing a track from a playlist doesn't delete the track from your library - it only removes the playlist association.
+</Tip>
+
+## Importing External Playlists
+
+BBPlayer can import playlists from external platforms:
+
+<Steps>
+  <Step title="Get Playlist Link">
+    Copy the share link from a supported platform (Bilibili, Netease Music, QQ Music, etc.).
+  </Step>
+  
+  <Step title="Import to BBPlayer">
+    In the Library tab, tap **+** → **导入外部歌单** (Import External Playlist).
+  </Step>
+  
+  <Step title="Paste the Link">
+    Paste the playlist URL and tap confirm. BBPlayer will fetch the playlist metadata and tracks.
+  </Step>
+  
+  <Step title="Sync Content">
+    The playlist will be created with type `bilibili`, `netease`, `qqmusic`, etc., based on the source. Tracks are automatically synced and stored locally.
+  </Step>
+</Steps>
+
+<Note>
+  External playlists sync automatically but can be manually refreshed by pulling down on the playlist page.
+</Note>
+
+## Shared Playlists
+
+BBPlayer supports collaborative playlist sharing through the BBPlayer backend:
+
+### Sharing a Playlist
+
+1. Open a local playlist
+2. Tap the share icon in the header
+3. Choose **创建共享链接** (Create Share Link)
+4. Set sharing permissions (view-only or collaborative)
+5. Share the generated link with others
+
+### Subscribing to Shared Playlists
+
+1. Receive a BBPlayer share link from another user
+2. In Library, tap **+** → **订阅共享歌单** (Subscribe to Shared Playlist)
+3. Paste the share link
+4. The playlist will appear in your library and sync automatically
+
+<Accordion title="How does playlist syncing work?">
+  Shared playlists use the `shareId` field to connect to the BBPlayer backend. Changes made by the playlist owner are synced to all subscribers. The `lastShareSyncAt` timestamp tracks the last sync time to efficiently fetch only new changes.
+</Accordion>
+
+## Managing Playlists
+
+### Edit Playlist Metadata
+
+1. Open the playlist
+2. Tap the edit icon (✏️) in the header
+3. Update title, description, or cover image
+4. Save changes
+
+### Delete a Playlist
+
+1. Long-press the playlist in the Library view
+2. Select **删除** (Delete)
+3. Confirm deletion
+
+<Note>
+  Deleting a playlist removes all track associations but doesn't delete the tracks themselves from your library.
+</Note>
+
+### Search Within a Playlist
+
+For playlists with many tracks:
+
+1. Open the playlist
+2. Tap the search icon (🔍)
+3. Enter track title or artist name
+4. Results are filtered in real-time
+
+The search uses case-insensitive matching on track titles and artist names via SQL `LIKE` queries.
+
+## Playlist Types
+
+BBPlayer uses different playlist types internally:
+
+- **`local`**: User-created playlists that you fully control
+- **`bilibili`**: Synced from Bilibili favorites or collections
+- **`netease`**: Imported from Netease Cloud Music
+- **`qqmusic`**: Imported from QQ Music
+- **`favorite`**: Special "Watch Later" list for Bilibili users
+
+<Tip>
+  Only `local` playlists support reordering, manual track management, and sharing. External playlists are read-only and sync from their source platforms.
+</Tip>
+
+## Best Practices
+
+1. **Use descriptive names**: Make playlist titles clear and searchable
+2. **Add cover images**: Visual covers make playlists easier to identify at a glance
+3. **Regular syncing**: For external playlists, pull to refresh occasionally to get the latest content
+4. **Organize by mood or genre**: Create themed playlists for different listening situations
+5. **Leverage shared playlists**: Collaborate with friends on music discovery
+
+## Troubleshooting
+
+<Accordion title="My external playlist won't sync">
+  Check your network connection and ensure you're logged in to Bilibili if importing Bilibili playlists. The app needs a valid cookie to access private playlists.
+</Accordion>
+
+<Accordion title="Tracks are in the wrong order">
+  For local playlists, the sort order is descending by `sortKey`. If tracks appear incorrectly ordered, try removing and re-adding them, or manually drag them to the correct positions.
+</Accordion>
+
+<Accordion title="Can't create a playlist with a certain name">
+  Playlist titles must be unique. If you see an error, a playlist with that name already exists. Try a different title or delete the existing playlist first.
+</Accordion>

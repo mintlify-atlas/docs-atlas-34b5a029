@@ -1,0 +1,342 @@
+---
+title: Monorepo Structure
+description: Understanding BBPlayer's monorepo organization with pnpm workspaces
+---
+
+BBPlayer uses a monorepo architecture managed by **pnpm workspaces** to organize code across multiple applications and shared packages. This structure enables code reuse, consistent tooling, and efficient dependency management.
+
+## Workspace Configuration
+
+The monorepo is configured in `pnpm-workspace.yaml`:
+
+```yaml
+packages:
+  - apps/*
+  - packages/*
+```
+
+All packages use **pnpm 10.26.2** as specified in the root `package.json`.
+
+## Directory Structure
+
+```
+bbplayer/
+├── apps/
+│   ├── mobile/          # React Native mobile application
+│   ├── backend/         # Cloudflare Workers API
+│   └── docs/            # Documentation website
+├── packages/
+│   ├── orpheus/         # Audio playback Expo module
+│   ├── splash/          # Lyrics parsing library
+│   ├── image-theme-colors/  # Theme color extraction
+│   ├── logs/            # Logging utility
+│   └── eslint-plugin/   # Custom ESLint rules
+├── patches/             # Package patches
+├── .github/             # CI/CD workflows
+└── package.json         # Root workspace config
+```
+
+## Applications
+
+### Mobile App (`apps/mobile`)
+
+The main React Native application for Android and iOS.
+
+<CardGroup cols={2}>
+  <Card title="Package Name" icon="box">
+    `@bbplayer/mobile`
+  </Card>
+  <Card title="Version" icon="tag">
+    2.3.2
+  </Card>
+  <Card title="Framework" icon="mobile">
+    React Native 0.83.1 + Expo 55
+  </Card>
+  <Card title="Dependencies" icon="link">
+    Uses all workspace packages
+  </Card>
+</CardGroup>
+
+**Key Source Directories:**
+
+- `src/app/`: Expo Router file-based routing
+- `src/features/`: Feature-sliced modules (player, library, downloads, etc.)
+- `src/lib/`: Core libraries (API clients, database, services)
+- `src/components/`: Shared React components
+- `src/hooks/`: Custom React hooks
+- `src/utils/`: Utility functions
+
+**Build Scripts:**
+
+```json
+{
+  "android": "WITH_ROZENITE=true expo run:android",
+  "start": "WITH_ROZENITE=true APP_VARIANT=development expo start",
+  "prepare": "pbjs -t static-module -w commonjs -o src/lib/api/bilibili/proto/dm.js"
+}
+```
+
+<Note>
+The mobile app uses **Rozenite** for advanced Metro bundler optimizations and profiling capabilities.
+</Note>
+
+### Backend Service (`apps/backend`)
+
+Serverless API built with Hono and deployed on Cloudflare Workers.
+
+<CardGroup cols={2}>
+  <Card title="Package Name" icon="box">
+    `@bbplayer/backend`
+  </Card>
+  <Card title="Version" icon="tag">
+    0.0.1
+  </Card>
+  <Card title="Framework" icon="server">
+    Hono 4.12.2
+  </Card>
+  <Card title="Runtime" icon="cloud">
+    Cloudflare Workers
+  </Card>
+</CardGroup>
+
+**Key Source Directories:**
+
+- `src/routes/`: API route handlers
+- `src/db/`: Database schema and migrations
+- `src/middleware/`: Request middleware
+- `src/validators/`: ArkType validation schemas
+
+**Development Scripts:**
+
+```json
+{
+  "dev": "wrangler dev",
+  "deploy": "wrangler deploy",
+  "db:generate": "drizzle-kit generate",
+  "db:push": "drizzle-kit push",
+  "db:studio": "drizzle-kit studio"
+}
+```
+
+### Documentation (`apps/docs`)
+
+Mintlify-powered documentation website (you're reading it now!).
+
+## Shared Packages
+
+### @bbplayer/orpheus
+
+Custom Expo module for audio playback based on Android Media3 ExoPlayer.
+
+```json
+{
+  "name": "@bbplayer/orpheus",
+  "version": "0.11.3",
+  "main": "src/index.ts"
+}
+```
+
+**Features:**
+- Native audio playback with Media3
+- Background playback support
+- Queue management
+- Audio focus handling
+- Media session integration
+
+**Structure:**
+- `src/`: TypeScript API
+- `android/`: Kotlin implementation
+- `ios/`: Swift implementation
+- `example/`: Test application
+
+### @bbplayer/splash
+
+Lyrics parsing and conversion library supporting SPL format.
+
+```json
+{
+  "name": "@bbplayer/splash",
+  "version": "1.0.0",
+  "main": "src/index.ts"
+}
+```
+
+**Capabilities:**
+- Parse LRC and SPL lyrics formats
+- Word-level timing support
+- Romaji annotation
+- Translation layers
+- Format conversion utilities
+
+<Info>
+SPL (Synchronized Progressive Lyrics) is BBPlayer's custom format supporting word-level timing and multi-layer translations. See the [SPL specification](https://bbplayer.roitium.com/SPL) for details.
+</Info>
+
+### @bbplayer/image-theme-colors
+
+Expo module for extracting theme colors from images.
+
+```json
+{
+  "name": "@bbplayer/image-theme-colors",
+  "version": "0.3.0",
+  "main": "src/index.ts"
+}
+```
+
+**Features:**
+- Extract dominant colors from album artwork
+- Material Design 3 color scheme generation
+- Monet theming support
+- Native performance using Expo ImageRef
+
+### @bbplayer/logs
+
+Performance-aware logging library.
+
+```json
+{
+  "name": "@bbplayer/logs",
+  "version": "5.6.2",
+  "main": "src/index.ts"
+}
+```
+
+**Features:**
+- Namespace-based logging
+- Custom log levels
+- Multiple transports (console, file)
+- Performance-optimized for React Native
+- Conditional logging based on environment
+
+### @bbplayer/eslint-plugin
+
+Custom ESLint rules for BBPlayer code conventions.
+
+```json
+{
+  "name": "@bbplayer/eslint-plugin",
+  "main": "src/index.ts"
+}
+```
+
+Provides project-specific linting rules to maintain code quality and consistency.
+
+## Workspace Dependencies
+
+### Internal Package References
+
+Packages reference each other using the `workspace:*` protocol:
+
+```json
+{
+  "dependencies": {
+    "@bbplayer/orpheus": "workspace:*",
+    "@bbplayer/splash": "workspace:*",
+    "@bbplayer/logs": "workspace:*",
+    "@bbplayer/image-theme-colors": "workspace:*"
+  }
+}
+```
+
+This ensures packages always use the local workspace version during development.
+
+### Dependency Synchronization
+
+The monorepo uses **syncpack** to ensure consistent dependency versions:
+
+```json
+{
+  "check:deps": "syncpack list-mismatches",
+  "fix:deps": "syncpack fix-mismatches"
+}
+```
+
+<Note>
+All packages share the same versions of React (19.2.0), React Native (0.83.1), TypeScript (5.9.3), and other core dependencies.
+</Note>
+
+## TypeScript Configuration
+
+The monorepo uses TypeScript project references for efficient type checking:
+
+```json
+{
+  "files": [],
+  "references": [
+    { "path": "./apps/mobile/tsconfig.json" },
+    { "path": "./packages/orpheus/tsconfig.json" },
+    { "path": "./packages/image-theme-colors/tsconfig.json" },
+    { "path": "./packages/splash/tsconfig.json" },
+    { "path": "./apps/docs/tsconfig.json" }
+  ]
+}
+```
+
+Each package has its own TypeScript configuration that extends the root config.
+
+## Development Workflow
+
+### Root Scripts
+
+The root `package.json` provides workspace-wide commands:
+
+```json
+{
+  "scripts": {
+    "format": "oxfmt --write .",
+    "lint": "oxlint --type-aware && eslint .",
+    "lint:fix": "oxlint --type-aware --fix && eslint . --fix",
+    "check:deps": "syncpack list-mismatches",
+    "fix:deps": "syncpack fix-mismatches",
+    "postinstall": "lefthook install"
+  }
+}
+```
+
+### Git Hooks
+
+Lefthook manages git hooks for the entire monorepo:
+
+- **Pre-commit**: Runs linting and formatting on staged files
+- **Commit-msg**: Validates commit messages (conventional commits)
+- **Pre-push**: Runs type checking
+
+### Package Patches
+
+The `patches/` directory contains modifications to node_modules:
+
+```yaml
+patchedDependencies:
+  react-native-mmkv: patches/react-native-mmkv.patch
+```
+
+Patches are automatically applied on `pnpm install`.
+
+## Build Optimization
+
+### Selective Dependencies
+
+The workspace configuration specifies which dependencies should be built:
+
+```yaml
+onlyBuiltDependencies:
+  - '@shopify/react-native-skia'
+  - '@sentry/cli'
+  - 'lefthook'
+  - 'protobufjs'
+  - 'sharp'
+```
+
+This reduces installation time by only building necessary native modules.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture Overview" icon="sitemap" href="/architecture/overview">
+    Return to the high-level architecture overview
+  </Card>
+  <Card title="Tech Stack" icon="layer-group" href="/architecture/tech-stack">
+    Explore the complete technology stack
+  </Card>
+</CardGroup>

@@ -1,0 +1,222 @@
+---
+title: Image Theme Colors
+description: Extract theme colors from images using Expo's native image processing
+---
+
+The `@bbplayer/image-theme-colors` package is a native Expo module that extracts color palettes from images using platform-native color extraction algorithms. It provides access to dominant, vibrant, muted, and other color swatches with their recommended text colors.
+
+## Installation
+
+```bash
+npm install @bbplayer/image-theme-colors
+```
+
+<Note>
+This package requires Expo 55+ and is designed to work with Expo's native module system.
+</Note>
+
+## Basic Usage
+
+```typescript
+import ExpoImageThemeColors from '@bbplayer/image-theme-colors';
+
+// Extract colors from an image URL
+const palette = await ExpoImageThemeColors.extractThemeColorAsync(
+  'https://example.com/image.jpg'
+);
+
+if (palette) {
+  console.log('Dominant color:', palette.dominant?.hex);
+  console.log('Vibrant color:', palette.vibrant?.hex);
+  console.log('Image dimensions:', palette.width, 'x', palette.height);
+}
+```
+
+## API Reference
+
+### extractThemeColorAsync()
+
+Extracts a color palette from an image source.
+
+```typescript
+function extractThemeColorAsync(
+  source: string | SharedRef<'image'> | ImageRef
+): Promise<ExtractedPalette | null>
+```
+
+<ParamField path="source" type="string | SharedRef<'image'> | ImageRef" required>
+  The image source to extract colors from. Can be:
+  - A URL string (http/https)
+  - A local file URI
+  - An Expo ImageRef from the `expo-image` component
+  - A SharedRef to a native image instance
+</ParamField>
+
+**Returns:** A Promise that resolves to an `ExtractedPalette` object or `null` if extraction fails.
+
+## Type Definitions
+
+### ExtractedPalette
+
+The complete color palette extracted from an image.
+
+```typescript
+type ExtractedPalette = {
+  width: number;
+  height: number;
+  dominant: ColorInfo | null;
+  vibrant: ColorInfo | null;
+  lightVibrant: ColorInfo | null;
+  darkVibrant: ColorInfo | null;
+  muted: ColorInfo | null;
+  lightMuted: ColorInfo | null;
+  darkMuted: ColorInfo | null;
+}
+```
+
+<ParamField path="width" type="number">
+  The width of the analyzed image in pixels
+</ParamField>
+
+<ParamField path="height" type="number">
+  The height of the analyzed image in pixels
+</ParamField>
+
+<ParamField path="dominant" type="ColorInfo | null">
+  The most prominent color in the image
+</ParamField>
+
+<ParamField path="vibrant" type="ColorInfo | null">
+  A vibrant, saturated color from the image
+</ParamField>
+
+<ParamField path="lightVibrant" type="ColorInfo | null">
+  A light, vibrant color variant
+</ParamField>
+
+<ParamField path="darkVibrant" type="ColorInfo | null">
+  A dark, vibrant color variant
+</ParamField>
+
+<ParamField path="muted" type="ColorInfo | null">
+  A muted, less saturated color from the image
+</ParamField>
+
+<ParamField path="lightMuted" type="ColorInfo | null">
+  A light, muted color variant
+</ParamField>
+
+<ParamField path="darkMuted" type="ColorInfo | null">
+  A dark, muted color variant
+</ParamField>
+
+### ColorInfo
+
+Detailed information about a specific color swatch.
+
+```typescript
+interface ColorInfo {
+  hex: string;
+  titleTextColor: string;
+  bodyTextColor: string;
+  population: number;
+}
+```
+
+<ParamField path="hex" type="string">
+  The color as a 6-digit hexadecimal value (e.g., `"#FF0000"`)
+</ParamField>
+
+<ParamField path="titleTextColor" type="string">
+  Recommended text color for titles when using this background color (e.g., `"#FFFFFF"`)
+</ParamField>
+
+<ParamField path="bodyTextColor" type="string">
+  Recommended text color for body text when using this background color (e.g., `"#000000"`)
+</ParamField>
+
+<ParamField path="population" type="number">
+  The number of pixels in the image that match this color, indicating its prominence
+</ParamField>
+
+## Usage with Expo Image
+
+You can use this package with Expo's Image component by accessing its `ImageRef`:
+
+```typescript
+import { Image } from 'expo-image';
+import ExpoImageThemeColors from '@bbplayer/image-theme-colors';
+import { useRef } from 'react';
+
+function AlbumArt() {
+  const imageRef = useRef<ImageRef>(null);
+
+  const extractColors = async () => {
+    if (imageRef.current) {
+      const palette = await ExpoImageThemeColors.extractThemeColorAsync(
+        imageRef.current
+      );
+      // Use the extracted colors
+    }
+  };
+
+  return (
+    <Image
+      ref={imageRef}
+      source={{ uri: 'https://example.com/album.jpg' }}
+      onLoad={extractColors}
+    />
+  );
+}
+```
+
+## Practical Example
+
+Create dynamic UI based on album artwork:
+
+```typescript
+import ExpoImageThemeColors from '@bbplayer/image-theme-colors';
+import { View, Text, StyleSheet } from 'react-native';
+import { useState, useEffect } from 'react';
+
+function MusicPlayer({ albumUrl }: { albumUrl: string }) {
+  const [colors, setColors] = useState<ExtractedPalette | null>(null);
+
+  useEffect(() => {
+    ExpoImageThemeColors.extractThemeColorAsync(albumUrl)
+      .then(setColors);
+  }, [albumUrl]);
+
+  if (!colors?.vibrant) return null;
+
+  return (
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.vibrant.hex }
+      ]}
+    >
+      <Text style={{ color: colors.vibrant.titleTextColor }}>
+        Now Playing
+      </Text>
+      <Text style={{ color: colors.vibrant.bodyTextColor }}>
+        Song details here
+      </Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    borderRadius: 12,
+  },
+});
+```
+
+## Platform Support
+
+- iOS: Uses native color palette extraction
+- Android: Uses native color palette extraction
+
+Both platforms use optimized native implementations for fast color extraction.

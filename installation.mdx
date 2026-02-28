@@ -1,0 +1,364 @@
+---
+title: Installation
+description: Download and install BBPlayer on your Android device. Detailed instructions for first-time setup and troubleshooting.
+---
+
+# Installation
+
+BBPlayer is currently available for **Android devices**. This guide will walk you through downloading, installing, and configuring BBPlayer on your device.
+
+## System Requirements
+
+<Card title="Android Requirements" icon="android">
+  - **OS Version**: Android 6.0 (Marshmallow) or higher
+  - **Storage**: At least 100MB free space (more recommended for offline music)
+  - **RAM**: 2GB minimum (4GB recommended)
+  - **Internet**: Required for streaming (optional for offline playback)
+</Card>
+
+<Note>
+  BBPlayer is optimized for modern Android devices. Older devices may experience performance issues, especially with the comments feature enabled.
+</Note>
+
+## Download BBPlayer
+
+<Steps>
+  <Step title="Visit GitHub Releases">
+    BBPlayer releases are published on GitHub. Visit the official releases page:
+    
+    **[github.com/bbplayer-app/bbplayer/releases](https://github.com/bbplayer-app/bbplayer/releases)**
+    
+    <Warning>
+      **Only download from official sources**. Avoid third-party app stores or unofficial mirrors to ensure you're getting the authentic, unmodified version.
+    </Warning>
+  </Step>
+  
+  <Step title="Download the Latest APK">
+    1. On the releases page, find the **latest release** (at the top)
+    2. Expand the **Assets** section
+    3. Download the APK file (typically named `bbplayer-v{version}.apk`)
+    
+    <Tip>
+      You can also download older versions if needed, but we always recommend using the latest release for bug fixes and new features.
+    </Tip>
+  </Step>
+  
+  <Step title="Verify the Download (Optional but Recommended)">
+    For security, you can verify the APK's integrity:
+    
+    1. Download the `.sha256` checksum file from the release
+    2. Use a checksum tool to verify the APK matches the published hash
+    
+    ```bash
+    # On Linux/macOS
+    sha256sum bbplayer-v2.3.2.apk
+    
+    # On Windows (PowerShell)
+    Get-FileHash bbplayer-v2.3.2.apk -Algorithm SHA256
+    ```
+    
+    Compare the output with the value in the `.sha256` file.
+  </Step>
+</Steps>
+
+## Install on Android
+
+<Steps>
+  <Step title="Enable Unknown Sources">
+    Before installing, you need to allow installation from unknown sources:
+    
+    <Tabs>
+      <Tab title="Android 8.0+">
+        1. Open **Settings** → **Apps & notifications** → **Special app access**
+        2. Tap **Install unknown apps**
+        3. Select your **browser** or **file manager**
+        4. Toggle **Allow from this source**
+      </Tab>
+      
+      <Tab title="Android 7.1 and below">
+        1. Open **Settings** → **Security**
+        2. Enable **Unknown sources**
+        3. Confirm the warning prompt
+      </Tab>
+    </Tabs>
+    
+    <Warning>
+      For security, disable "Unknown sources" after installation is complete.
+    </Warning>
+  </Step>
+  
+  <Step title="Install the APK">
+    1. Open your **file manager** or **downloads** folder
+    2. Tap the downloaded **BBPlayer APK**
+    3. Tap **Install** when prompted
+    4. Wait for installation to complete
+    5. Tap **Open** or find BBPlayer in your app drawer
+    
+    <Note>
+      Installation typically takes 10-30 seconds depending on your device.
+    </Note>
+  </Step>
+  
+  <Step title="Grant Required Permissions">
+    On first launch, BBPlayer will request permissions:
+    
+    ### Required Permissions
+    
+    <AccordionGroup>
+      <Accordion title="Storage Access" icon="folder">
+        **Why it's needed**: To cache audio files, store lyrics, and save downloaded content.
+        
+        **When denied**: You won't be able to download songs for offline playback or export audio files.
+      </Accordion>
+      
+      <Accordion title="Network Access" icon="wifi">
+        **Why it's needed**: To stream audio from Bilibili, fetch lyrics, and sync playlists.
+        
+        **When denied**: App will only work with previously downloaded content.
+      </Accordion>
+      
+      <Accordion title="Notifications (Optional)" icon="bell">
+        **Why it's needed**: To show playback controls in the notification shade and on lock screen.
+        
+        **When denied**: You'll need to open the app to control playback.
+      </Accordion>
+      
+      <Accordion title="Overlay Permission (Optional)" icon="layer-group">
+        **Why it's needed**: To display desktop lyrics (floating lyrics window).
+        
+        **When denied**: Desktop lyrics feature will not be available.
+        
+        Enable later in: **Settings** → **Playback Settings** → **Desktop Lyrics**
+      </Accordion>
+    </AccordionGroup>
+    
+    <Tip>
+      You can always manage permissions later in Android Settings → Apps → BBPlayer → Permissions.
+    </Tip>
+  </Step>
+  
+  <Step title="Complete Initial Setup">
+    When you first open BBPlayer:
+    
+    1. **Welcome screen** will briefly appear
+    2. App initializes the local database
+    3. You'll land on the **Home** screen
+    4. Optional: Log in to your Bilibili account (see [Quick Start](/quickstart#first-time-setup))
+  </Step>
+</Steps>
+
+## iOS Support
+
+<Warning>
+  iOS support is **experimental and not actively maintained**.
+</Warning>
+
+While BBPlayer has basic iOS compatibility, the development focus is currently on Android. iOS builds may not compile successfully or may have missing features.
+
+### Why iOS is not prioritized:
+
+- Developer does not have access to macOS/iOS devices for testing
+- Apple's strict app distribution policies make sideloading difficult
+- React Native's iOS support requires Xcode and macOS for compilation
+
+### For iOS developers:
+
+If you'd like to help bring BBPlayer to iOS:
+
+1. Fork the repository: [github.com/bbplayer-app/bbplayer](https://github.com/bbplayer-app/bbplayer)
+2. Follow the [Development Setup Guide](/development/setup)
+3. Build and test on iOS
+4. Submit a pull request with fixes
+
+<Card title="Contribute to iOS Support" icon="apple" href="/development/setup">
+  Help make BBPlayer available on iOS
+</Card>
+
+## Updating BBPlayer
+
+<Steps>
+  <Step title="Check for Updates">
+    BBPlayer does not have automatic updates. To check for new versions:
+    
+    1. Visit the [GitHub Releases](https://github.com/bbplayer-app/bbplayer/releases) page
+    2. Compare the latest version number with your installed version
+    3. Check **Settings** → **About** to see your current version
+  </Step>
+  
+  <Step title="Download the New Version">
+    Follow the same download process as initial installation (see above).
+  </Step>
+  
+  <Step title="Install Over Existing Version">
+    1. Tap the new APK file
+    2. Android will detect an existing installation
+    3. Tap **Update** or **Install**
+    4. Your data, playlists, and settings will be preserved
+    
+    <Note>
+      Always back up your playlists before major updates. Export them to local storage as a precaution.
+    </Note>
+  </Step>
+</Steps>
+
+<Tip>
+  Watch the GitHub repository to get notified of new releases:
+  
+  [github.com/bbplayer-app/bbplayer](https://github.com/bbplayer-app/bbplayer) → Click **Watch** → **Custom** → Check **Releases**
+</Tip>
+
+## Troubleshooting Installation
+
+<AccordionGroup>
+  <Accordion title="App not installing" icon="circle-xmark">
+    **Possible causes:**
+    
+    1. **Insufficient storage**: Free up space (Settings → Storage)
+    2. **Corrupted download**: Re-download the APK
+    3. **Incompatible Android version**: Ensure you're on Android 6.0+
+    4. **Security software blocking**: Temporarily disable antivirus apps
+    
+    **Solution:**
+    
+    ```bash
+    # Check available storage
+    Settings → Storage → Check "Available space"
+    
+    # Clear download cache
+    Settings → Apps → Downloads → Clear cache
+    ```
+  </Accordion>
+  
+  <Accordion title="App crashes on launch" icon="exclamation-triangle">
+    **Common causes:**
+    
+    1. **Outdated Android version**: Update your OS if possible
+    2. **Conflicting apps**: Try installing in safe mode
+    3. **Corrupted installation**: Uninstall and reinstall
+    
+    **Steps to fix:**
+    
+    1. Uninstall BBPlayer
+    2. Reboot your device
+    3. Re-download the APK
+    4. Install again
+    
+    If crashes persist, please [report an issue](https://github.com/bbplayer-app/bbplayer/issues) with:
+    - Your device model
+    - Android version
+    - App version
+    - Crash logs (if available)
+  </Accordion>
+  
+  <Accordion title="Parse error during installation" icon="file-exclamation">
+    This usually means:
+    
+    1. **Incomplete download**: The APK file is corrupted
+    2. **Wrong architecture**: APK doesn't match your device's CPU
+    
+    **Solution:**
+    
+    - Delete the downloaded APK
+    - Clear your browser cache
+    - Download again from GitHub Releases
+    - Ensure you're downloading the correct file (not the source code ZIP)
+  </Accordion>
+  
+  <Accordion title="Permissions not working" icon="shield-halved">
+    If you denied permissions during installation:
+    
+    **Re-enable permissions:**
+    
+    1. Go to **Settings** → **Apps** → **BBPlayer** → **Permissions**
+    2. Enable required permissions:
+       - Storage
+       - Network (usually auto-granted)
+    3. Restart BBPlayer
+    
+    **For overlay permission (Desktop Lyrics):**
+    
+    1. Open BBPlayer
+    2. Go to **Settings** → **Playback Settings** → **Desktop Lyrics**
+    3. Toggle the switch — you'll be redirected to system settings
+    4. Enable **Display over other apps**
+  </Accordion>
+  
+  <Accordion title="Can't find the downloaded APK" icon="magnifying-glass">
+    **Common locations:**
+    
+    - `/storage/emulated/0/Download/`
+    - Internal Storage → Download folder
+    - Check your browser's download history
+    
+    **Using a file manager:**
+    
+    1. Open any file manager app
+    2. Navigate to **Downloads** or **Internal Storage/Download**
+    3. Look for `bbplayer-v*.apk`
+    
+    <Tip>
+      Some browsers let you tap the download notification to open the file directly.
+    </Tip>
+  </Accordion>
+</AccordionGroup>
+
+## Post-Installation Steps
+
+After successful installation:
+
+<CardGroup cols={2}>
+  <Card title="Quick Start Guide" icon="rocket" href="/quickstart">
+    Follow our guide to set up BBPlayer in 5 minutes
+  </Card>
+  <Card title="Login to Bilibili" icon="right-to-bracket" href="/features/bilibili-login">
+    Connect your Bilibili account to access favorites
+  </Card>
+  <Card title="Create Playlists" icon="list-music" href="/guides/creating-playlists">
+    Learn how to organize your music library
+  </Card>
+  <Card title="Enable Offline Mode" icon="download" href="/guides/offline-playback">
+    Download songs for offline listening
+  </Card>
+</CardGroup>
+
+## Security & Privacy
+
+<Note>
+  **BBPlayer is open source** and auditable. You can review the source code at any time:
+  
+  [github.com/bbplayer-app/bbplayer](https://github.com/bbplayer-app/bbplayer)
+</Note>
+
+### What BBPlayer Does NOT Do:
+
+- ❌ Does not collect your Bilibili credentials
+- ❌ Does not access your contacts or messages
+- ❌ Does not track your location
+- ❌ Does not contain ads or trackers
+- ❌ Does not share your data with third parties
+
+### What BBPlayer Collects (Optional):
+
+- ✅ Anonymous usage analytics (can be disabled)
+- ✅ Crash reports to fix bugs (can be disabled)
+
+Disable data collection: **Settings** → **General Settings** → **Share Data** → Toggle OFF
+
+## Need Help?
+
+If you encounter issues during installation:
+
+<CardGroup cols={2}>
+  <Card title="FAQ" icon="circle-question" href="/resources/faq">
+    Check common questions and answers
+  </Card>
+  <Card title="Report a Bug" icon="bug" href="https://github.com/bbplayer-app/bbplayer/issues">
+    Open an issue on GitHub
+  </Card>
+  <Card title="Community Discussions" icon="comments" href="https://github.com/bbplayer-app/bbplayer/discussions">
+    Ask the community for help
+  </Card>
+  <Card title="Development Guide" icon="code" href="/development/setup">
+    Build from source (advanced users)
+  </Card>
+</CardGroup>

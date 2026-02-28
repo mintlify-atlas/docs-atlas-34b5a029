@@ -1,0 +1,432 @@
+---
+title: Customization and Settings
+description: Customize BBPlayer's appearance, behavior, and features to match your preferences
+---
+
+BBPlayer offers extensive customization options for appearance, playback behavior, lyrics display, and more. This guide covers all settings to help you personalize your experience.
+
+## Appearance Settings
+
+Access appearance customization at **Settings** → **外观** (Appearance).
+
+### Player Background Style
+
+Choose how the player screen looks:
+
+<Steps>
+  <Step title="Open Background Settings">
+    In Appearance settings, find **选择播放器背景样式** (Select Player Background Style).
+  </Step>
+  
+  <Step title="Choose a Style">
+    Select from:
+    
+    - **渐变** (Gradient): Dynamic color gradient extracted from album artwork
+      - Uses the `@bbplayer/image-theme-colors` package
+      - Extracts dominant colors and creates a smooth gradient background
+      - Updates automatically when track changes
+    
+    - **默认背景** (Default Background): Standard Material Design 3 background
+      - Uses theme colors from React Native Paper
+      - Consistent with app-wide color scheme
+      - Better for battery life
+  </Step>
+</Steps>
+
+<Tip>
+  Gradient backgrounds are visually striking but may use slightly more battery. Switch to default background if you prefer a cleaner look or want to conserve power.
+</Tip>
+
+### Now Playing Bar Style (Android Only)
+
+Customize the mini player that appears at the bottom of the screen:
+
+- **悬浮** (Float - Default): Floating bar with rounded corners and elevation
+  - Sits above content with subtle shadow
+  - More visually distinct
+  - Better for one-handed use
+
+- **沉浸** (Immersive): Bar integrated into the bottom edge
+  - Blends seamlessly with content
+  - More screen space for content
+  - Cleaner, minimalist appearance
+
+### Audio Spectrum Visualizer
+
+Enable real-time audio visualization:
+
+<Steps>
+  <Step title="Enable Spectrum">
+    Toggle **显示音频频谱** (Display Audio Spectrum) in Appearance settings.
+  </Step>
+  
+  <Step title="Grant Microphone Permission">
+    On Android, you'll be prompted to grant microphone permission.
+    
+    <Note>
+      The microphone is used only to analyze audio for visualization - no audio is recorded or stored.
+    </Note>
+  </Step>
+  
+  <Step title="Visualizer Active">
+    When enabled:
+    - Album cover becomes circular
+    - Spectrum bars animate around the cover in real-time
+    - Colors sync with the audio's frequency spectrum
+  </Step>
+</Steps>
+
+<Accordion title="How does the spectrum visualizer work?">
+  The visualizer uses the device's audio processing to analyze frequency data in real-time. It requires the `RECORD_AUDIO` permission to access the audio output stream and generate the frequency spectrum visualization.
+</Accordion>
+
+## Theme and Colors
+
+BBPlayer uses **Material Design 3** with dynamic theming:
+
+### System Theme
+
+The app automatically follows your device's light/dark mode setting:
+
+- **Light Mode**: Clean white backgrounds with dark text
+- **Dark Mode**: OLED-friendly dark backgrounds with light text
+
+<Note>
+  BBPlayer uses React Native Paper's `MD3DarkTheme` and `MD3LightTheme` with automatic switching based on `Appearance.getColorScheme()`.
+</Note>
+
+### Dynamic Colors
+
+Colors adapt based on album artwork:
+
+1. When you play a track, the app extracts the dominant color palette from the cover
+2. This palette influences:
+   - Gradient backgrounds (if enabled)
+   - Accent colors in the player UI
+   - Button tints and highlights
+
+<Tip>
+  For the best visual experience, use high-quality album artwork with distinct colors.
+</Tip>
+
+## Playback Settings
+
+Access at **Settings** → **播放** (Playback).
+
+### Audio Quality
+
+Select preferred streaming quality:
+
+1. **高** (High): Best audio quality, higher data usage
+2. **中** (Medium): Balanced quality and data usage
+3. **低** (Low): Lower quality, data saver mode
+
+<Note>
+  Quality settings apply to streaming only. Downloaded tracks maintain their original quality regardless of this setting.
+</Note>
+
+### Repeat and Shuffle
+
+Control playback behavior:
+
+- **Repeat Modes**:
+  - Off: Play through playlist once
+  - All: Loop entire playlist
+  - One: Repeat current track indefinitely
+
+- **Shuffle**: Randomize track order
+  - Toggle in the player controls
+  - Shuffle state persists across app restarts
+
+### Playback History
+
+Toggle **发送播放历史** (Send Play History):
+
+- **Enabled**: Your listening history is tracked and synced
+  - Enables personalized recommendations
+  - Syncs play counts across devices
+  - Powers "Recently Played" features
+
+- **Disabled**: No history tracking
+  - More private listening
+  - No cross-device sync
+  - Recommendations less personalized
+
+### Danmaku (Bullet Comments)
+
+For Bilibili videos with comments:
+
+<Steps>
+  <Step title="Enable Danmaku">
+    Toggle **启用弹幕** (Enable Danmaku) in Playback settings.
+  </Step>
+  
+  <Step title="Adjust Filter Level">
+    Use the **弹幕过滤等级** (Danmaku Filter Level) slider:
+    - 0: Show all comments
+    - 5: Filter moderate spam/low-quality comments
+    - 10: Show only high-quality/popular comments
+  </Step>
+  
+  <Step title="View During Playback">
+    Danmaku comments scroll across the player screen synchronized with the video's timeline.
+  </Step>
+</Steps>
+
+<Tip>
+  Danmaku adds a fun, interactive element to music videos but may be distracting for audio-only listening. Try filter level 7-8 for a good balance.
+</Tip>
+
+## Lyrics Settings
+
+Detailed lyrics customization - see the [Lyrics Management guide](/guides/lyrics-management) for complete details.
+
+### Quick Settings
+
+- **Lyric Source**: Choose preferred provider (Netease, QQ Music, Kugou, or Auto)
+- **Desktop Lyrics**: Enable floating lyrics overlay (Android only)
+- **Verbatim Lyrics**: Show word-by-word synchronized lyrics
+- **Old-School Style**: Classic centered lyrics layout
+
+## Privacy and Data
+
+Access at **Settings** → **通用** (General).
+
+### Data Collection
+
+Toggle **启用数据收集** (Enable Data Collection):
+
+- **Enabled**: Anonymous usage analytics are collected
+  - Helps improve app performance
+  - Identifies common crashes and bugs
+  - No personal information is collected
+
+- **Disabled**: No analytics sent
+  - Completely private usage
+  - Developers have less insight into issues
+
+<Note>
+  Data collection uses Sentry for crash reporting. Only app version, device model, OS version, and crash stack traces are collected - never your music library or listening habits.
+</Note>
+
+### Debug Logging
+
+Toggle **启用调试日志** (Enable Debug Logs):
+
+- **Enabled**: Detailed logs written to file
+  - Useful for troubleshooting issues
+  - Logs stored in app's document directory
+  - Can be viewed in Settings → Logs
+
+- **Disabled**: Minimal logging
+  - Better performance
+  - Less storage usage
+
+<Tip>
+  Enable debug logs only when troubleshooting. Logs can grow large over time and should be cleared periodically.
+</Tip>
+
+## Account Settings
+
+### Bilibili Account
+
+Manage your Bilibili login:
+
+<Steps>
+  <Step title="Login to Bilibili">
+    Go to Settings → General → **Bilibili 账号** (Bilibili Account).
+  </Step>
+  
+  <Step title="Enter Credentials">
+    Use your Bilibili account or scan QR code to authenticate.
+  </Step>
+  
+  <Step title="Sync Features">
+    Once logged in, you can:
+    - Access private playlists
+    - Sync favorites from Bilibili
+    - Enable "Watch Later" list
+    - Comment on videos (if implemented)
+  </Step>
+</Steps>
+
+<Accordion title="How are Bilibili credentials stored?">
+  BBPlayer stores Bilibili cookies in encrypted local storage using MMKV. The cookies are used to authenticate API requests but are never sent to third-party servers. You can clear them anytime from Settings → Account → Logout.
+</Accordion>
+
+### BBPlayer Account (Cloud Features)
+
+For playlist sharing and cloud sync:
+
+1. Register/login in Settings → General → **BBPlayer 账号**
+2. Your account enables:
+   - Shared playlist subscriptions
+   - Cross-device playlist sync
+   - Backup of playlist metadata
+
+<Note>
+  BBPlayer account is optional. All core features work without registration.
+</Note>
+
+## Advanced Settings
+
+### Storage Management
+
+View and manage app storage:
+
+- **音频缓存** (Audio Cache): Downloaded tracks
+- **歌词缓存** (Lyrics Cache): Cached lyric files
+- **封面缓存** (Cover Cache): Album artwork
+- **应用数据** (App Data): Database and settings
+
+Actions:
+- **清除歌词缓存** (Clear Lyrics Cache): Delete all lyric files
+- **清除封面缓存** (Clear Cover Cache): Remove album art (re-downloads as needed)
+- **清除应用数据** (Clear App Data): ⚠️ Resets app to factory state
+
+<Tip>
+  Clearing caches is safe and can free up storage. The app will re-download content as needed. Only "Clear App Data" deletes your playlists and settings.
+</Tip>
+
+### Update Settings
+
+Configure app updates:
+
+- **自动检查更新** (Auto Check Updates): Check for new versions on startup
+- **仅 Wi-Fi 更新** (Wi-Fi Only Updates): Download updates only on Wi-Fi
+- **加入测试计划** (Join Beta Program): Get early access to new features
+
+### Network Settings
+
+- **仅 Wi-Fi 播放** (Wi-Fi Only Playback): Prevent streaming over cellular
+- **预加载下一首** (Preload Next Track): Buffer upcoming track for seamless transitions
+- **网络超时** (Network Timeout): Seconds to wait for network requests (default: 30)
+
+## Gesture Controls
+
+Customize touch gestures in the player:
+
+- **Swipe Down**: Minimize player to now-playing bar
+- **Swipe Up on Bar**: Expand to full player
+- **Long Press Track**: Enter selection mode in playlists
+- **Double Tap Cover**: Toggle play/pause (optional)
+
+<Note>
+  Gesture settings may vary by platform (Android vs iOS).
+</Note>
+
+## Keyboard Shortcuts (Future)
+
+Planned desktop/tablet shortcuts:
+
+- **Space**: Play/Pause
+- **Arrow Keys**: Seek forward/backward
+- **Shift + Arrow**: Next/Previous track
+- **M**: Mute/Unmute
+- **L**: Toggle lyrics
+
+## Accessibility
+
+### Font Size
+
+Adjust text size throughout the app:
+
+1. Go to Settings → Accessibility → **字体大小** (Font Size)
+2. Choose from: Small, Medium (default), Large, Extra Large
+
+### Reduce Motion
+
+Disable animations:
+
+- Toggle **减少动画** (Reduce Motion)
+- Disables:
+  - Spectrum visualizer
+  - Lyric scroll animations
+  - Screen transitions
+  - Album art zoom effects
+
+### High Contrast
+
+Increase UI contrast:
+
+- Toggle **高对比度** (High Contrast)
+- Enhances:
+  - Text against backgrounds
+  - Button borders
+  - Icon visibility
+
+## Importing/Exporting Settings
+
+### Export Settings
+
+1. Go to Settings → Advanced → **导出设置** (Export Settings)
+2. Select export location
+3. Settings saved as JSON file
+
+Exported settings include:
+- All preferences from `Settings` object
+- Theme choices
+- Playback configurations
+- Privacy settings
+
+### Import Settings
+
+1. Go to Settings → Advanced → **导入设置** (Import Settings)
+2. Select previously exported JSON file
+3. Confirm import to restore settings
+
+<Tip>
+  Export your settings before reinstalling the app or switching devices to quickly restore your preferences.
+</Tip>
+
+## Resetting to Defaults
+
+To restore all settings to factory defaults:
+
+1. Go to Settings → Advanced → **重置所有设置** (Reset All Settings)
+2. Confirm the action
+3. App will reset to default configuration
+
+<Note>
+  This only resets preferences. Your playlists, downloads, and library are not affected.
+</Note>
+
+## Troubleshooting
+
+<Accordion title="Settings not saving">
+  If your settings changes don't persist:
+  
+  1. Check available storage (low storage can prevent writes)
+  2. Force close and reopen the app
+  3. Clear app cache in system settings
+  4. Check file permissions in Android settings
+  5. As a last resort, reinstall the app
+</Accordion>
+
+<Accordion title="Theme not switching automatically">
+  If light/dark mode doesn't follow your system:
+  
+  1. Verify system dark mode is enabled/disabled
+  2. Force close the app completely
+  3. Check for app updates (may be a bug)
+  4. Some Android skins require explicit app restart
+</Accordion>
+
+<Accordion title="Spectrum visualizer not working">
+  Common issues:
+  
+  1. Microphone permission not granted - check app permissions
+  2. Android audio policy restrictions - try rebooting device
+  3. Bluetooth audio may not support spectrum - switch to device speaker
+  4. Some Android ROMs restrict audio access - check manufacturer forums
+</Accordion>
+
+## Best Practices
+
+1. **Experiment with themes**: Try both gradient and default backgrounds to see what you prefer
+2. **Battery optimization**: Disable spectrum visualizer and reduce motion for longer battery life
+3. **Network awareness**: Enable Wi-Fi only playback to avoid mobile data overages
+4. **Regular cache clearing**: Clear lyrics/cover cache monthly to free up storage
+5. **Backup settings**: Export settings after extensive customization
+6. **Privacy balance**: Enable data collection to help development, but disable if privacy is critical
+7. **Debug logs for support**: When reporting issues, enable debug logs first to provide detailed information

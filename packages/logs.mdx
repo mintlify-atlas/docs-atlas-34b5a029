@@ -1,0 +1,591 @@
+---
+title: Logs
+description: Performance-aware logging system for React Native with namespaces, custom levels, and transports
+---
+
+The `@bbplayer/logs` package is a flexible logging system designed specifically for React Native applications. It provides namespaced loggers, custom severity levels, colored console output, and multiple transport options for file writing, Sentry, and Crashlytics.
+
+## Installation
+
+```bash
+npm install @bbplayer/logs
+```
+
+## Quick Start
+
+```typescript
+import { logger } from '@bbplayer/logs';
+
+const log = logger.createLogger();
+
+log.debug('Debug message');
+log.info('Info message');
+log.warn('Warning message');
+log.error('Error message');
+```
+
+## API Reference
+
+### createLogger()
+
+Creates a new logger instance with custom configuration.
+
+```typescript
+function createLogger<
+  K extends transportFunctionType<any> | transportFunctionType<any>[],
+  Y extends string
+>(config?: configLoggerType<K, Y>)
+```
+
+<ParamField path="config" type="configLoggerType" optional>
+  Configuration object for the logger. All properties are optional and will use defaults if not provided.
+</ParamField>
+
+**Returns:** A logger instance with methods for each defined log level.
+
+### Configuration Options
+
+```typescript
+type configLoggerType = {
+  severity?: string;
+  transport?: transportFunctionType | transportFunctionType[];
+  transportOptions?: object;
+  levels?: Record<string, number>;
+  async?: boolean;
+  asyncFunc?: Function;
+  stringifyFunc?: (msg: any) => string;
+  formatFunc?: (level: string, extension: string | null, msgs: any) => string | null;
+  dateFormat?: string | ((date: Date) => string);
+  printLevel?: boolean;
+  printDate?: boolean;
+  fixedExtLvlLength?: boolean;
+  enabled?: boolean;
+  enabledExtensions?: string[] | string | null;
+}
+```
+
+<ParamField path="severity" type="string" default="debug">
+  Minimum severity level to log. Only messages at or above this level will be output.
+</ParamField>
+
+<ParamField path="transport" type="transportFunctionType | transportFunctionType[]" default="consoleTransport">
+  Transport function(s) to handle log output. Can be a single transport or an array of multiple transports.
+</ParamField>
+
+<ParamField path="transportOptions" type="object" default="{}">
+  Options passed to the transport function(s). Structure depends on the transport being used.
+</ParamField>
+
+<ParamField path="levels" type="Record<string, number>" default="{ debug: 0, info: 1, warn: 2, error: 3 }">
+  Custom log levels with their severity numbers. Lower numbers = lower severity.
+</ParamField>
+
+<ParamField path="async" type="boolean" default="false">
+  Whether to process logs asynchronously using the asyncFunc.
+</ParamField>
+
+<ParamField path="asyncFunc" type="Function">
+  Custom async function for processing logs. Default uses setTimeout with 0ms delay.
+</ParamField>
+
+<ParamField path="stringifyFunc" type="(msg: any) => string">
+  Custom function to stringify log messages. Handles objects, functions, and circular references.
+</ParamField>
+
+<ParamField path="formatFunc" type="(level: string, extension: string | null, msgs: any) => string | null">
+  Custom formatter for the complete log message. Overrides default formatting.
+</ParamField>
+
+<ParamField path="dateFormat" type="string | ((date: Date) => string)" default="time">
+  Date format for log timestamps. Options: `"time"`, `"local"`, `"utc"`, `"iso"`, or a custom function.
+</ParamField>
+
+<ParamField path="printLevel" type="boolean" default="true">
+  Whether to include the log level in the output.
+</ParamField>
+
+<ParamField path="printDate" type="boolean" default="true">
+  Whether to include the timestamp in the output.
+</ParamField>
+
+<ParamField path="fixedExtLvlLength" type="boolean" default="false">
+  Whether to pad log levels and extensions to a fixed length for aligned output.
+</ParamField>
+
+<ParamField path="enabled" type="boolean" default="true">
+  Whether logging is enabled globally.
+</ParamField>
+
+<ParamField path="enabledExtensions" type="string[] | string | null" default="null">
+  Whitelist of extension namespaces to enable. If null, all extensions are enabled.
+</ParamField>
+
+## Logger Methods
+
+The logger instance provides methods based on the configured levels:
+
+### debug() / info() / warn() / error()
+
+```typescript
+log.debug(...msgs: any[]): boolean
+log.info(...msgs: any[]): boolean
+log.warn(...msgs: any[]): boolean
+log.error(...msgs: any[]): boolean
+```
+
+Log messages at different severity levels. Each method accepts any number of arguments.
+
+```typescript
+log.debug('Simple message');
+log.info('User logged in:', { userId: 123 });
+log.warn('Memory usage:', memoryUsage);
+log.error('Failed to fetch:', error);
+```
+
+### extend()
+
+Create a namespaced logger for a specific module or component.
+
+```typescript
+extend(extension: string): extendedLogType
+```
+
+<ParamField path="extension" type="string" required>
+  The namespace identifier for this extended logger
+</ParamField>
+
+```typescript
+const log = logger.createLogger();
+const apiLog = log.extend('API');
+const dbLog = log.extend('Database');
+
+apiLog.info('Fetching user data');  // Output: "[timestamp] API | INFO : Fetching user data"
+dbLog.error('Connection failed');   // Output: "[timestamp] Database | ERROR : Connection failed"
+```
+
+### enable() / disable()
+
+Enable or disable logging globally or for specific extensions.
+
+```typescript
+enable(extension?: string): boolean
+disable(extension?: string): boolean
+```
+
+```typescript
+log.disable();           // Disable all logging
+log.enable();            // Enable all logging
+log.disable('API');      // Disable only API extension
+log.enable('Database');  // Enable only Database extension
+```
+
+### setSeverity() / getSeverity()
+
+Change or retrieve the current minimum severity level.
+
+```typescript
+setSeverity(level: string): string
+getSeverity(): string
+```
+
+```typescript
+log.setSeverity('warn');  // Only warn and error will be logged
+const current = log.getSeverity();  // Returns: "warn"
+```
+
+### getExtensions()
+
+Get a list of all created extensions.
+
+```typescript
+getExtensions(): string[]
+```
+
+```typescript
+const extensions = log.getExtensions();  // Returns: ["API", "Database"]
+```
+
+### patchConsole()
+
+Replace the global console methods with this logger.
+
+```typescript
+patchConsole(): void
+```
+
+```typescript
+log.patchConsole();
+
+// Now console methods use the logger
+console.log('This goes through the logger');
+console.error('This too');
+```
+
+<Note>
+Use `patchConsole()` carefully as it replaces global console behavior. You can restore the original console if needed.
+</Note>
+
+## Transports
+
+Transports determine where and how log messages are output.
+
+### consoleTransport
+
+Outputs colored logs to the console.
+
+```typescript
+import { logger, consoleTransport } from '@bbplayer/logs';
+
+const log = logger.createLogger({
+  transport: consoleTransport,
+  transportOptions: {
+    colors: {
+      debug: 'white',
+      info: 'blueBright',
+      warn: 'yellowBright',
+      error: 'redBright',
+    },
+    extensionColors: {
+      API: 'greenBright',
+      Database: 'magentaBright',
+    },
+  },
+});
+```
+
+**Options:**
+
+<ParamField path="colors" type="Record<string, Color>">
+  Color mapping for each log level. Available colors: `black`, `red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `white`, `grey`, and their `Bright` variants.
+</ParamField>
+
+<ParamField path="extensionColors" type="Record<string, Color>">
+  Color mapping for extension namespaces.
+</ParamField>
+
+<ParamField path="consoleFunc" type="(msg: string) => void">
+  Custom console function to use instead of console.log.
+</ParamField>
+
+### mapConsoleTransport
+
+Maps log levels to specific console methods.
+
+```typescript
+import { logger, mapConsoleTransport } from '@bbplayer/logs';
+
+const log = logger.createLogger({
+  transport: mapConsoleTransport,
+  transportOptions: {
+    mapLevels: {
+      debug: 'log',
+      info: 'info',
+      warn: 'warn',
+      error: 'error',
+    },
+  },
+});
+```
+
+**Options:**
+
+<ParamField path="mapLevels" type="Record<string, ConsoleMethod>">
+  Maps each log level to a console method (`log`, `info`, `warn`, `error`).
+</ParamField>
+
+### fileAsyncTransport
+
+Writes logs to files asynchronously. Supports React Native FS, Expo FileSystem (legacy), and Expo FileSystem (next).
+
+```typescript
+import { logger, fileAsyncTransport } from '@bbplayer/logs';
+import * as FileSystem from 'expo-file-system';
+
+const log = logger.createLogger({
+  transport: fileAsyncTransport,
+  transportOptions: {
+    FS: FileSystem,
+    fileName: 'app-{date-today}.log',
+    fileNameDateType: 'iso',
+  },
+});
+```
+
+**Options:**
+
+<ParamField path="FS" type="any" required>
+  The filesystem instance. Can be React Native FS, Expo FileSystem, or Expo FileSystem (next).
+</ParamField>
+
+<ParamField path="fileName" type="string" default="log">
+  The log file name. Use `{date-today}` placeholder for automatic date insertion.
+</ParamField>
+
+<ParamField path="filePath" type="string">
+  Custom file path. Defaults to the document directory.
+</ParamField>
+
+<ParamField path="fileNameDateType" type="'eu' | 'us' | 'iso'" default="eu">
+  Date format for the `{date-today}` placeholder: `eu` (DD-MM-YYYY), `us` (MM-DD-YYYY), `iso` (YYYY-MM-DD).
+</ParamField>
+
+### sentryTransport
+
+Sends logs to Sentry for error tracking.
+
+```typescript
+import { logger, sentryTransport } from '@bbplayer/logs';
+import * as Sentry from '@sentry/react-native';
+
+const log = logger.createLogger({
+  transport: sentryTransport,
+  transportOptions: {
+    SENTRY: Sentry,
+    errorLevels: ['error', 'warn'],
+  },
+});
+```
+
+**Options:**
+
+<ParamField path="SENTRY" type="SentryInstance" required>
+  The Sentry instance with `captureException` and `addBreadcrumb` methods.
+</ParamField>
+
+<ParamField path="errorLevels" type="string | string[]">
+  Log levels to send as errors (using `captureException`). Other levels are sent as breadcrumbs.
+</ParamField>
+
+### crashlyticsTransport
+
+Sends logs to Firebase Crashlytics.
+
+```typescript
+import { logger, crashlyticsTransport } from '@bbplayer/logs';
+import crashlytics from '@react-native-firebase/crashlytics';
+
+const log = logger.createLogger({
+  transport: crashlyticsTransport,
+  transportOptions: {
+    CRASHLYTICS: crashlytics(),
+    errorLevels: ['error'],
+  },
+});
+```
+
+**Options:**
+
+<ParamField path="CRASHLYTICS" type="CrashlyticsInstance" required>
+  The Crashlytics instance with `recordError` and `log` methods.
+</ParamField>
+
+<ParamField path="errorLevels" type="string | string[]">
+  Log levels to record as errors (using `recordError`). Other levels use `log`.
+</ParamField>
+
+## Multiple Transports
+
+Use multiple transports simultaneously:
+
+```typescript
+import {
+  logger,
+  consoleTransport,
+  fileAsyncTransport,
+  sentryTransport,
+} from '@bbplayer/logs';
+import * as FileSystem from 'expo-file-system';
+import * as Sentry from '@sentry/react-native';
+
+const log = logger.createLogger({
+  transport: [
+    consoleTransport,
+    fileAsyncTransport,
+    sentryTransport,
+  ],
+  transportOptions: {
+    // Console options
+    colors: { error: 'redBright' },
+    // File options
+    FS: FileSystem,
+    fileName: 'logs-{date-today}.log',
+    // Sentry options
+    SENTRY: Sentry,
+    errorLevels: ['error'],
+  },
+});
+```
+
+## Advanced Examples
+
+### Custom Log Levels
+
+```typescript
+const log = logger.createLogger({
+  levels: {
+    trace: 0,
+    debug: 1,
+    info: 2,
+    warn: 3,
+    error: 4,
+    fatal: 5,
+  },
+  severity: 'debug',
+});
+
+log.trace('Very detailed trace');
+log.fatal('Critical system failure');
+```
+
+### Custom Formatting
+
+```typescript
+const log = logger.createLogger({
+  formatFunc: (level, extension, msgs) => {
+    const timestamp = new Date().toISOString();
+    const namespace = extension ? `[${extension}]` : '';
+    const message = msgs.map(m => 
+      typeof m === 'object' ? JSON.stringify(m) : String(m)
+    ).join(' ');
+    
+    return `${timestamp} ${namespace} ${level.toUpperCase()}: ${message}`;
+  },
+});
+```
+
+### Production Configuration
+
+```typescript
+import {
+  logger,
+  consoleTransport,
+  fileAsyncTransport,
+  sentryTransport,
+} from '@bbplayer/logs';
+import * as FileSystem from 'expo-file-system';
+import * as Sentry from '@sentry/react-native';
+
+const isDev = __DEV__;
+
+const log = logger.createLogger({
+  severity: isDev ? 'debug' : 'warn',
+  transport: isDev
+    ? [consoleTransport]
+    : [fileAsyncTransport, sentryTransport],
+  transportOptions: {
+    // Console (dev only)
+    colors: {
+      debug: 'grey',
+      info: 'blueBright',
+      warn: 'yellowBright',
+      error: 'redBright',
+    },
+    // File (production)
+    FS: FileSystem,
+    fileName: 'app-{date-today}.log',
+    fileNameDateType: 'iso',
+    // Sentry (production)
+    SENTRY: Sentry,
+    errorLevels: ['error'],
+  },
+  printLevel: true,
+  printDate: true,
+  fixedExtLvlLength: isDev,
+});
+
+export default log;
+```
+
+### Module-based Logging
+
+```typescript
+// logger.ts
+import { logger, consoleTransport } from '@bbplayer/logs';
+
+export const log = logger.createLogger({
+  transport: consoleTransport,
+  transportOptions: {
+    colors: { error: 'redBright', warn: 'yellowBright' },
+  },
+});
+
+// api.ts
+import { log } from './logger';
+
+const apiLog = log.extend('API');
+
+export async function fetchUser(id: string) {
+  apiLog.debug('Fetching user:', id);
+  try {
+    const response = await fetch(`/api/users/${id}`);
+    apiLog.info('User fetched successfully');
+    return response.json();
+  } catch (error) {
+    apiLog.error('Failed to fetch user:', error);
+    throw error;
+  }
+}
+
+// database.ts
+import { log } from './logger';
+
+const dbLog = log.extend('Database');
+
+export function connect() {
+  dbLog.info('Connecting to database...');
+  // ...
+}
+```
+
+## Type Definitions
+
+### transportFunctionType
+
+Function signature for custom transport implementations.
+
+```typescript
+type transportFunctionType<T extends object> = (props: {
+  msg: string;
+  rawMsg: unknown;
+  level: { severity: number; text: string };
+  extension?: string | null;
+  options?: T;
+}) => void
+```
+
+### Custom Transport Example
+
+```typescript
+import { transportFunctionType } from '@bbplayer/logs';
+
+type MyTransportOptions = {
+  endpoint: string;
+  apiKey: string;
+};
+
+const myTransport: transportFunctionType<MyTransportOptions> = (props) => {
+  if (!props.options?.endpoint) return;
+  
+  fetch(props.options.endpoint, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${props.options.apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      level: props.level.text,
+      message: props.msg,
+      timestamp: new Date().toISOString(),
+      extension: props.extension,
+    }),
+  });
+};
+
+const log = logger.createLogger({
+  transport: myTransport,
+  transportOptions: {
+    endpoint: 'https://logs.example.com/api/logs',
+    apiKey: 'your-api-key',
+  },
+});
+```

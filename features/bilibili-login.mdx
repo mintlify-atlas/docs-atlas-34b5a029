@@ -1,0 +1,192 @@
+---
+title: 'Bilibili Login'
+description: 'Authenticate with Bilibili using QR code or cookie to access your favorites and collections'
+---
+
+BBPlayer requires Bilibili authentication to access your playlists, favorites, and streaming URLs. There are two methods to log in: QR code scanning and cookie import.
+
+## QR Code Login
+
+The recommended way to authenticate is through QR code scanning, which is secure and straightforward.
+
+<Steps>
+  <Step title="Open Login Modal">
+    Navigate to **Settings > General > Account** and tap on **Login with QR Code**.
+  </Step>
+  
+  <Step title="Generate QR Code">
+    The app will fetch a login QR code from Bilibili's authentication service (`passport.bilibili.com/x/passport-login/web/qrcode/generate`).
+    
+    <Info>
+    The QR code is valid for a limited time. If it expires, you'll need to close and reopen the login modal.
+    </Info>
+  </Step>
+  
+  <Step title="Scan with Bilibili App">
+    Open the official Bilibili mobile app and use the built-in QR scanner to scan the code displayed in BBPlayer.
+    
+    - Status will update to **"等待扫码"** (Waiting for scan)
+    - After scanning, status changes to **"等待确认"** (Waiting for confirmation)
+  </Step>
+  
+  <Step title="Confirm Login">
+    Confirm the login request in the Bilibili app. BBPlayer will automatically:
+    - Receive the authentication cookies
+    - Parse and store the session data
+    - Refresh your favorites and playlists
+    - Close the login modal
+  </Step>
+</Steps>
+
+### How It Works
+
+The QR code login process involves:
+
+1. **Generation**: Request a unique `qrcode_key` from Bilibili
+2. **Polling**: Check login status every 2 seconds at `/x/passport-login/web/qrcode/poll`
+3. **Status Tracking**: Monitor for scan, confirmation, expiration, or success
+4. **Cookie Extraction**: Parse `Set-Cookie` headers and store session tokens
+
+```typescript
+// Status codes during QR login (apps/mobile/src/components/modals/login/QRCodeLoginModal.tsx:74-89)
+switch (action.payload.code) {
+  case QRCODE_LOGIN_STATUS_WAIT:
+    return { statusText: '等待扫码' }
+  case QRCODE_LOGIN_STATUS_SCANNED_BUT_NOT_CONFIRMED:
+    return { statusText: '等待确认' }
+  case QRCODE_LOGIN_STATUS_QRCODE_EXPIRED:
+    return { status: 'expired', statusText: '二维码已过期' }
+  case QRCODE_LOGIN_STATUS_SUCCESS:
+    return { status: 'success' }
+}
+```
+
+<Tip>
+You can tap the QR code to open the login URL directly in your browser as an alternative authentication method.
+</Tip>
+
+## Cookie Import
+
+For advanced users, BBPlayer supports direct cookie import from your browser or other sources.
+
+<Warning>
+Cookie import requires manual extraction and is less secure than QR code login. Only use this method if you understand the security implications.
+</Warning>
+
+<Steps>
+  <Step title="Extract Cookies">
+    Use your browser's developer tools to extract cookies from `bilibili.com`:
+    - Open DevTools (F12)
+    - Navigate to Application/Storage > Cookies
+    - Copy the cookie string
+  </Step>
+  
+  <Step title="Import to BBPlayer">
+    Navigate to **Settings > General > Account** and choose **Import Cookie**. Paste the cookie string.
+    
+    Required cookie fields:
+    - `SESSDATA`: Session authentication token
+    - `bili_jct`: CSRF token for API requests
+    - `DedeUserID`: User ID
+  </Step>
+  
+  <Step title="Validation">
+    BBPlayer will parse and validate the cookie string. If valid, it stores the cookie object and syncs with the playback engine.
+  </Step>
+</Steps>
+
+### Cookie Management
+
+BBPlayer stores cookies in two locations:
+- **App State**: In-memory store for immediate access
+- **MMKV Storage**: Persistent storage across app restarts
+- **Orpheus Engine**: Native playback module for authenticated streaming
+
+```typescript
+// Cookie storage flow (apps/mobile/src/hooks/stores/useAppStore.ts:119-131)
+setBilibiliCookie: (cookieString) => {
+  const result = parseCookieToObject(cookieString)
+  if (result.isErr()) {
+    return result
+  }
+  const cookieObj = result.value
+  state.bilibiliCookie = cookieObj
+  
+  // Sync to native playback engine
+  Orpheus.setBilibiliCookie(serializeCookieObject(cookieObj))
+}
+```
+
+## Authentication States
+
+BBPlayer manages several authentication states:
+
+<Accordion title="Logged Out">
+  No cookies stored. Limited to public content only. Cannot access:
+  - User favorites
+  - Private playlists
+  - High-quality streams
+  - Personal collections
+</Accordion>
+
+<Accordion title="Logged In">
+  Valid session cookies stored. Full access to:
+  - All favorite lists
+  - Collections and series
+  - Authenticated API endpoints
+  - Higher bitrate audio streams
+</Accordion>
+
+<Accordion title="Session Expired">
+  Cookies present but invalid. Features may fail with CSRF token errors. Re-login required.
+</Accordion>
+
+## Troubleshooting
+
+### QR Code Won't Generate
+
+- Check internet connectivity
+- Verify Bilibili services are accessible
+- Try again after a few seconds
+
+### Login Success But Features Don't Work
+
+- Ensure cookies include `bili_jct` token
+- Check if CSRF token is valid
+- Try logging out and back in
+
+### "Invalid Cookie" Error
+
+- Verify cookie format is correct (semicolon-separated key=value pairs)
+- Ensure no undefined values in cookie string
+- Check for special characters or encoding issues
+
+## Security Considerations
+
+<Warning>
+**Never share your cookies or session tokens**. They provide full access to your Bilibili account.
+</Warning>
+
+- Cookies are stored encrypted in MMKV storage
+- Session tokens are never logged or transmitted outside Bilibili APIs
+- Re-authentication required after major app updates
+- Cookies automatically invalidate after Bilibili's session timeout
+
+## Integration with BBPlayer Cloud
+
+When syncing playlists to BBPlayer Cloud, the app can automatically exchange your Bilibili cookies for a BBPlayer JWT token.
+
+```typescript
+// Auto-login to BBPlayer backend (apps/mobile/src/hooks/mutations/db/playlist.ts:21-33)
+const cookie = store.bilibiliCookie
+if (!cookie || Object.keys(cookie).length === 0) {
+  throw new Error('No Bilibili cookie found')
+}
+
+const cookieStr = serializeCookieObject(cookie)
+const resp = await bbplayerApi.auth.login.$post({
+  json: { cookie: cookieStr },
+})
+```
+
+This enables seamless synchronization between local and cloud playlists without requiring separate authentication.

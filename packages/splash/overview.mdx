@@ -1,0 +1,158 @@
+---
+title: '@bbplayer/splash'
+description: 'Lyrics parser and converter for BBPlayer'
+---
+
+# @bbplayer/splash
+
+BBPlayer 歌词解析与转换核心工具库 (BBPlayer Lyrics Parser and Converter Core Library).
+
+## Introduction
+
+`@bbplayer/splash` is the core lyrics parsing and conversion engine for BBPlayer. It is built around the **SPL (Salt Player Lyric)** format, an advanced extension of the LRC format designed to support richer lyric presentation effects including word-by-word timing.
+
+## Features
+
+### Parsing Capabilities
+
+- **Multi-format support**: Parse LRC, SPL, and other lyric formats with precision
+- **Word-level timing**: Support for word-by-word (karaoke-style) lyric synchronization
+- **Translation support**: Handle multiple translation lines per lyric line
+- **Metadata extraction**: Parse lyric metadata like title, artist, album, etc.
+
+### Conversion Engine
+
+- **Netease Cloud Music**: Convert YRC format from Netease Cloud Music to SPL format
+- **LRC to SPL**: Convert standard LRC to SPL with enhanced timing capabilities
+- **Preserve word-level timing**: Maintain word-by-word timing data during conversion
+
+### Type Safety
+
+- **TypeScript-first**: Fully typed API with comprehensive type definitions
+- **Unified data structures**: Consistent `SplLyricData` interface for all parsed lyrics
+- **Error handling**: Type-safe error handling with `SplParseError`
+
+### Performance
+
+- **Mobile-optimized**: Parsing algorithms optimized for mobile environments
+- **Efficient parsing**: Fast parsing with minimal memory overhead
+- **Zero dependencies**: Core functionality has no runtime dependencies
+
+## Installation
+
+<CodeGroup>
+
+```bash pnpm
+pnpm add @bbplayer/splash
+```
+
+```bash npm
+npm install @bbplayer/splash
+```
+
+```bash yarn
+yarn add @bbplayer/splash
+```
+
+</CodeGroup>
+
+## Quick Start
+
+### Parse LRC Lyrics
+
+```typescript
+import { parseSpl } from '@bbplayer/splash'
+
+const lrcContent = `
+[ti:Song Title]
+[ar:Artist Name]
+[00:12.00]First line of lyrics
+[00:17.20]Second line of lyrics
+`
+
+const lyrics = parseSpl(lrcContent)
+
+console.log(lyrics.meta.ti) // "Song Title"
+console.log(lyrics.lines[0].content) // "First line of lyrics"
+console.log(lyrics.lines[0].startTime) // 12000 (in milliseconds)
+```
+
+### Parse SPL with Word-level Timing
+
+```typescript
+import { parseSpl } from '@bbplayer/splash'
+
+const splContent = `[00:12.00]Hello<00:12.50> World<00:13.00>`
+
+const lyrics = parseSpl(splContent)
+
+console.log(lyrics.lines[0].isDynamic) // true
+console.log(lyrics.lines[0].spans[0]) 
+// {
+//   text: "Hello",
+//   startTime: 12000,
+//   endTime: 12500,
+//   duration: 500
+// }
+```
+
+### Convert Netease YRC to SPL
+
+```typescript
+import { parseYrc } from '@bbplayer/splash'
+
+const yrcContent = `[1000,2000](1000,500,0)Hello(1500,500,0)World`
+
+const splContent = parseYrc(yrcContent)
+console.log(splContent) 
+// "[00:01.000]Hello<00:01.500>World<00:02.000>"
+```
+
+## Core Concepts
+
+### SPL Format
+
+SPL (Salt Player Lyric) is an enhanced lyric format that extends LRC with:
+
+- **Word-level timestamps** using `<mm:ss.SSS>` tags for karaoke-style display
+- **Multiple translations** through repeated timestamps
+- **Explicit end times** for precise timing control
+
+See the [SPL Format Specification](/packages/splash/spl-format) for details.
+
+### Data Structures
+
+All parsed lyrics return a `SplLyricData` object:
+
+```typescript
+interface SplLyricData {
+  meta: Record<string, string>      // Metadata (title, artist, etc.)
+  lines: LyricLine[]                 // Sorted array of lyric lines
+}
+
+interface LyricLine {
+  startTime: number                  // Line start time (ms)
+  endTime: number                    // Line end time (ms)
+  content: string                    // Main lyric content
+  translations: string[]             // Translation lines
+  isDynamic: boolean                 // Has word-level timing?
+  spans: LyricSpan[]                 // Word-level timing data
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="SPL Format" icon="file-lines" href="/packages/splash/spl-format">
+    Learn about the SPL format specification and syntax
+  </Card>
+  <Card title="API Reference" icon="code" href="/packages/splash/api">
+    Explore the complete API documentation
+  </Card>
+</CardGroup>
+
+## Resources
+
+- [SPL Official Specification](https://bbplayer.roitium.com/SPL)
+- [GitHub Repository](https://github.com/bbplayer/bbplayer)
+- [BBPlayer Documentation](/)

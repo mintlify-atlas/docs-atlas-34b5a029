@@ -1,0 +1,713 @@
+---
+title: 'API Reference'
+description: 'Complete API reference for @bbplayer/splash'
+---
+
+# API Reference
+
+Complete API documentation for `@bbplayer/splash` including parsers, converters, utilities, and type definitions.
+
+## Parsers
+
+### parseSpl
+
+Parse SPL (Salt Player Lyric) or LRC format lyrics into structured data.
+
+```typescript
+function parseSpl(lrcContent: string): SplLyricData
+```
+
+<ParamField path="lrcContent" type="string" required>
+  SPL/LRC format lyric string to parse
+</ParamField>
+
+<ResponseField name="return" type="SplLyricData">
+  Parsed lyric data object containing metadata and lines
+  
+  <Expandable title="SplLyricData structure">
+    <ResponseField name="meta" type="Record<string, string>">
+      Key-value pairs of metadata (e.g., `ti`, `ar`, `al`, `by`)
+    </ResponseField>
+    
+    <ResponseField name="lines" type="LyricLine[]">
+      Sorted array of lyric lines with timestamps and content
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+**Throws**: `SplParseError` when encountering unparseable content
+
+#### Example: Parse Basic LRC
+
+```typescript
+import { parseSpl } from '@bbplayer/splash'
+
+const lrc = `
+[ti:Song Title]
+[ar:Artist Name]
+[00:12.00]First line of lyrics
+[00:17.20]Second line of lyrics
+`
+
+const result = parseSpl(lrc)
+
+console.log(result.meta.ti)           // "Song Title"
+console.log(result.meta.ar)           // "Artist Name"
+console.log(result.lines.length)      // 2
+console.log(result.lines[0].content)  // "First line of lyrics"
+console.log(result.lines[0].startTime) // 12000 (milliseconds)
+```
+
+#### Example: Parse SPL with Word-Level Timing
+
+```typescript
+import { parseSpl } from '@bbplayer/splash'
+
+const spl = `[00:12.00]Hello<00:12.50> World<00:13.00>`
+
+const result = parseSpl(spl)
+
+console.log(result.lines[0].isDynamic)  // true
+console.log(result.lines[0].spans)
+// [
+//   { text: "Hello", startTime: 12000, endTime: 12500, duration: 500 },
+//   { text: " World", startTime: 12500, endTime: 13000, duration: 500 }
+// ]
+```
+
+#### Example: Parse with Translations
+
+```typescript
+import { parseSpl } from '@bbplayer/splash'
+
+const spl = `
+[00:12.00]Hello World
+[00:12.00]你好世界
+[00:12.00]こんにちは世界
+`
+
+const result = parseSpl(spl)
+
+console.log(result.lines[0].content)      // "Hello World"
+console.log(result.lines[0].translations) // ["你好世界", "こんにちは世界"]
+```
+
+#### Example: Error Handling
+
+```typescript
+import { parseSpl, SplParseError } from '@bbplayer/splash'
+
+try {
+  const result = parseSpl('Invalid content without timestamp')
+} catch (error) {
+  if (error instanceof SplParseError) {
+    console.error(`Parse error at line ${error.line}: ${error.message}`)
+    // "Parse error at line 1: 第 1 行解析错误: 未找到时间戳，且无法关联到上一行"
+  }
+}
+```
+
+<Note>
+`parseSpl` is the main entry point for parsing. It handles both standard LRC and extended SPL formats.
+</Note>
+
+---
+
+### verify
+
+Validate SPL/LRC lyric content without throwing exceptions.
+
+```typescript
+function verify(
+  lrcContent: string
+): { isValid: true } | { isValid: false; error: SplParseError }
+```
+
+<ParamField path="lrcContent" type="string" required>
+  SPL/LRC content to validate
+</ParamField>
+
+<ResponseField name="return" type="{ isValid: boolean; error?: SplParseError }">
+  Validation result object
+  
+  <Expandable title="Return type variants">
+    <ResponseField name="isValid: true">
+      Content is valid SPL/LRC format
+    </ResponseField>
+    
+    <ResponseField name="isValid: false">
+      Content is invalid
+      
+      <ResponseField name="error" type="SplParseError">
+        The parse error that occurred
+      </ResponseField>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+#### Example: Validate Lyrics
+
+```typescript
+import { verify } from '@bbplayer/splash'
+
+const result = verify('[00:12.00]Valid lyrics')
+
+if (result.isValid) {
+  console.log('Lyrics are valid!')
+} else {
+  console.error(`Invalid at line ${result.error.line}: ${result.error.message}`)
+}
+```
+
+#### Example: Validation in Form
+
+```typescript
+import { verify } from '@bbplayer/splash'
+
+function validateLyricsInput(input: string): string | null {
+  const result = verify(input)
+  
+  if (result.isValid) {
+    return null // No error
+  } else {
+    return `Line ${result.error.line}: ${result.error.message}`
+  }
+}
+
+// Usage in a form
+const error = validateLyricsInput(userInput)
+if (error) {
+  showError(error)
+}
+```
+
+---
+
+## Converters
+
+### parseYrc
+
+Convert Netease Cloud Music YRC format to SPL format.
+
+```typescript
+function parseYrc(yrcContent: string): string
+```
+
+<ParamField path="yrcContent" type="string" required>
+  YRC format lyrics from Netease Cloud Music API
+</ParamField>
+
+<ResponseField name="return" type="string">
+  SPL format lyrics with word-level timing preserved
+</ResponseField>
+
+#### YRC Format
+
+Netease Cloud Music uses two YRC formats:
+
+**1. JSON format (metadata)**:
+```json
+{"t":0,"c":[{"tx":"作词: "},{"tx":"DECO*27"}]}
+```
+
+**2. YRC format (word-level lyrics)**:
+```
+[lineStartTime,lineDuration](wordStartTime,wordDuration,0)word1(wordStartTime,wordDuration,0)word2
+```
+
+#### Example: Convert JSON Metadata
+
+```typescript
+import { parseYrc } from '@bbplayer/splash'
+
+const yrc = `
+{"t":0,"c":[{"tx":"作词: "},{"tx":"DECO*27"}]}
+{"t":1000,"c":[{"tx":"作曲: "},{"tx":"DECO*27"}]}
+`
+
+const spl = parseYrc(yrc)
+console.log(spl)
+// [00:00.000]作词: DECO*27
+// [00:01.000]作曲: DECO*27
+```
+
+#### Example: Convert Word-Level Timing
+
+```typescript
+import { parseYrc } from '@bbplayer/splash'
+
+// YRC: [lineStart,lineDuration](wordStart,wordDur,0)text
+const yrc = '[1000,2000](1000,500,0)Hello(1500,500,0)World'
+
+const spl = parseYrc(yrc)
+console.log(spl)
+// [00:01.000]Hello<00:01.500>World<00:02.000>
+```
+
+#### Example: Handle Gaps (Instrumental)
+
+```typescript
+import { parseYrc } from '@bbplayer/splash'
+
+// Word 1 ends at 1500, Word 2 starts at 2000 (500ms gap)
+const yrc = '[1000,2000](1000,500,0)Before(2000,500,0)After'
+
+const spl = parseYrc(yrc)
+console.log(spl)
+// [00:01.000]Before<00:01.500><00:02.000>After<00:02.500>
+//                   ^^^^^^^^^^^ explicit gap markers
+```
+
+#### Example: Mixed Content
+
+```typescript
+import { parseYrc } from '@bbplayer/splash'
+
+const yrc = `
+{"t":0,"c":[{"tx":"作词: "},{"tx":"DECO*27"}]}
+[00:20.848]特別な君と 特別な日を
+[57500,3500](57500,520,0)流(58020,180,0)れ
+`
+
+const spl = parseYrc(yrc)
+console.log(spl)
+// [00:00.000]作词: DECO*27
+// [00:20.848]特別な君と 特別な日を
+// [00:57.500]流<00:58.020>れ<00:58.200>
+```
+
+#### Example: Complete Workflow
+
+```typescript
+import { parseYrc, parseSpl } from '@bbplayer/splash'
+
+// Step 1: Fetch YRC from Netease API
+const response = await fetch('https://music.163.com/api/song/lyric?id=687506')
+const data = await response.json()
+
+// Step 2: Convert YRC to SPL
+const splContent = parseYrc(data.yrc.lyric)
+
+// Step 3: Parse SPL to structured data
+const lyrics = parseSpl(splContent)
+
+// Step 4: Use in your app
+lyrics.lines.forEach(line => {
+  console.log(`[${line.startTime}ms] ${line.content}`)
+  if (line.isDynamic) {
+    line.spans.forEach(span => {
+      console.log(`  ${span.text}: ${span.startTime}ms - ${span.endTime}ms`)
+    })
+  }
+})
+```
+
+---
+
+### formatSplTime
+
+Format milliseconds to SPL time format.
+
+```typescript
+function formatSplTime(ms: number): string
+```
+
+<ParamField path="ms" type="number" required>
+  Time in milliseconds (negative values are clamped to 0)
+</ParamField>
+
+<ResponseField name="return" type="string">
+  Formatted time string in `mm:ss.SSS` format
+</ResponseField>
+
+#### Example: Format Time
+
+```typescript
+import { formatSplTime } from '@bbplayer/splash'
+
+console.log(formatSplTime(0))       // "00:00.000"
+console.log(formatSplTime(1000))    // "00:01.000"
+console.log(formatSplTime(60000))   // "01:00.000"
+console.log(formatSplTime(61234))   // "01:01.234"
+console.log(formatSplTime(3661234)) // "61:01.234"
+console.log(formatSplTime(-100))    // "00:00.000" (clamped)
+```
+
+---
+
+## Utilities
+
+### parseTimeTag
+
+Parse SPL/LRC time tags to milliseconds.
+
+```typescript
+function parseTimeTag(timeStr: string): number
+```
+
+<ParamField path="timeStr" type="string" required>
+  Time tag string in various formats:
+  - `[mm:ss.SS]` (standard LRC)
+  - `<mm:ss.SS>` (SPL word-level)
+  - `mm:ss.SS` (no brackets)
+  - Supports 1-6 digit milliseconds
+</ParamField>
+
+<ResponseField name="return" type="number">
+  Absolute time in milliseconds (negative values are clamped to 0)
+</ResponseField>
+
+#### Example: Parse Various Formats
+
+```typescript
+import { parseTimeTag } from '@bbplayer/splash'
+
+console.log(parseTimeTag('[00:12.00]'))    // 12000
+console.log(parseTimeTag('<00:12.50>'))    // 12500
+console.log(parseTimeTag('00:12.123'))     // 12123
+console.log(parseTimeTag('[5:30.5]'))      // 330500
+console.log(parseTimeTag('[0:0.1]'))       // 100
+console.log(parseTimeTag('[0:0.02]'))      // 20
+console.log(parseTimeTag('[0:0.123456]'))  // 123
+```
+
+---
+
+## Types
+
+### SplLyricData
+
+The root data structure for all parsed lyrics.
+
+```typescript
+interface SplLyricData {
+  meta: Record<string, string>
+  lines: LyricLine[]
+}
+```
+
+<ResponseField name="meta" type="Record<string, string>">
+  Key-value pairs of metadata from tags like `[ti:Title]`, `[ar:Artist]`, etc.
+</ResponseField>
+
+<ResponseField name="lines" type="LyricLine[]">
+  Sorted array of lyric lines, ordered by `startTime`
+</ResponseField>
+
+#### Example
+
+```typescript
+const data: SplLyricData = {
+  meta: {
+    ti: "Song Title",
+    ar: "Artist Name",
+    al: "Album Name"
+  },
+  lines: [
+    {
+      startTime: 12000,
+      endTime: 17000,
+      content: "First line",
+      translations: [],
+      isDynamic: false,
+      spans: []
+    }
+  ]
+}
+```
+
+---
+
+### LyricLine
+
+Represents a single line of lyrics with timing and content.
+
+```typescript
+interface LyricLine {
+  startTime: number
+  endTime: number
+  content: string
+  translations: string[]
+  isDynamic: boolean
+  spans: LyricSpan[]
+}
+```
+
+<ResponseField name="startTime" type="number">
+  Line start time in milliseconds
+</ResponseField>
+
+<ResponseField name="endTime" type="number">
+  Line end time in milliseconds (inferred or explicit)
+</ResponseField>
+
+<ResponseField name="content" type="string">
+  Main lyric content (text only, without timestamps)
+</ResponseField>
+
+<ResponseField name="translations" type="string[]">
+  Array of translation strings for this line
+</ResponseField>
+
+<ResponseField name="isDynamic" type="boolean">
+  `true` if line contains word-level timing (spans), `false` otherwise
+</ResponseField>
+
+<ResponseField name="spans" type="LyricSpan[]">
+  Array of word-level timing data (empty if `isDynamic` is `false`)
+</ResponseField>
+
+---
+
+### LyricSpan
+
+Represents a single word or phrase with precise timing.
+
+```typescript
+interface LyricSpan {
+  text: string
+  startTime: number
+  endTime: number
+  duration: number
+}
+```
+
+<ResponseField name="text" type="string">
+  The text content of this span (word or phrase)
+</ResponseField>
+
+<ResponseField name="startTime" type="number">
+  Absolute start time in milliseconds
+</ResponseField>
+
+<ResponseField name="endTime" type="number">
+  Absolute end time in milliseconds
+</ResponseField>
+
+<ResponseField name="duration" type="number">
+  Pre-calculated duration in milliseconds (`endTime - startTime`)
+</ResponseField>
+
+#### Example
+
+```typescript
+const span: LyricSpan = {
+  text: "Hello",
+  startTime: 12000,
+  endTime: 12500,
+  duration: 500
+}
+```
+
+---
+
+### SplParseError
+
+Error class for parsing failures.
+
+```typescript
+class SplParseError extends Error {
+  constructor(line: number, message: string)
+  line: number
+  message: string
+  name: 'SplParseError'
+}
+```
+
+<ResponseField name="line" type="number">
+  Line number where the error occurred (1-based)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Error message in format: `第 ${line} 行解析错误: ${detail}`
+</ResponseField>
+
+#### Example
+
+```typescript
+import { parseSpl, SplParseError } from '@bbplayer/splash'
+
+try {
+  parseSpl('Invalid content')
+} catch (error) {
+  if (error instanceof SplParseError) {
+    console.log(error.line)    // 1
+    console.log(error.message) // "第 1 行解析错误: 未找到时间戳..."
+    console.log(error.name)    // "SplParseError"
+  }
+}
+```
+
+---
+
+### YrcLine
+
+Type definition for Netease Cloud Music JSON lyric format.
+
+```typescript
+interface YrcLine {
+  t: number                    // Start time in milliseconds
+  c: { tx: string }[]          // Array of text components
+}
+```
+
+<ResponseField name="t" type="number">
+  Start time in milliseconds
+</ResponseField>
+
+<ResponseField name="c" type="{ tx: string }[]">
+  Array of text components that make up the line
+</ResponseField>
+
+#### Example
+
+```typescript
+const yrcLine: YrcLine = {
+  t: 1000,
+  c: [
+    { tx: "作词: " },
+    { tx: "DECO*27" }
+  ]
+}
+// Converts to: [00:01.000]作词: DECO*27
+```
+
+---
+
+### RawLine
+
+Internal type used during parsing (exported for advanced use cases).
+
+```typescript
+interface RawLine {
+  lineNumber: number
+  timestamps: number[]
+  content: string
+}
+```
+
+<ResponseField name="lineNumber" type="number">
+  Source line number in the input string
+</ResponseField>
+
+<ResponseField name="timestamps" type="number[]">
+  All timestamps extracted from this line
+</ResponseField>
+
+<ResponseField name="content" type="string">
+  Content after removing timestamp tags
+</ResponseField>
+
+<Note>
+`RawLine` is primarily for internal use. Most users don't need to interact with this type.
+</Note>
+
+---
+
+## Complete Example
+
+### Building a Karaoke Player
+
+```typescript
+import { parseSpl, parseYrc } from '@bbplayer/splash'
+
+// Fetch lyrics from Netease Cloud Music
+async function fetchLyrics(songId: string) {
+  const response = await fetch(`https://music.163.com/api/song/lyric?id=${songId}`)
+  const data = await response.json()
+  
+  // Convert YRC to SPL
+  const splContent = parseYrc(data.yrc?.lyric || data.lrc?.lyric)
+  
+  // Parse to structured data
+  return parseSpl(splContent)
+}
+
+// Display lyrics with karaoke effect
+function displayKaraoke(lyrics: SplLyricData, currentTime: number) {
+  // Find current line
+  const currentLine = lyrics.lines.find(
+    line => currentTime >= line.startTime && currentTime < line.endTime
+  )
+  
+  if (!currentLine) return
+  
+  // Display line with progress
+  if (currentLine.isDynamic) {
+    // Word-by-word display
+    currentLine.spans.forEach(span => {
+      const isActive = currentTime >= span.startTime && currentTime < span.endTime
+      const progress = isActive 
+        ? (currentTime - span.startTime) / span.duration
+        : currentTime >= span.endTime ? 1 : 0
+      
+      renderWord(span.text, progress)
+    })
+  } else {
+    // Line-by-line display
+    const progress = (currentTime - currentLine.startTime) / 
+                     (currentLine.endTime - currentLine.startTime)
+    renderLine(currentLine.content, progress)
+  }
+  
+  // Display translations
+  currentLine.translations.forEach(trans => {
+    renderTranslation(trans)
+  })
+}
+
+// Usage
+const lyrics = await fetchLyrics('687506')
+setInterval(() => {
+  displayKaraoke(lyrics, audio.currentTime * 1000)
+}, 16) // 60fps
+```
+
+### Converting and Validating User Input
+
+```typescript
+import { parseSpl, verify, formatSplTime } from '@bbplayer/splash'
+
+function processUserLyrics(input: string) {
+  // Validate first
+  const validation = verify(input)
+  
+  if (!validation.isValid) {
+    return {
+      success: false,
+      error: `Line ${validation.error.line}: ${validation.error.message}`
+    }
+  }
+  
+  // Parse lyrics
+  const lyrics = parseSpl(input)
+  
+  // Generate statistics
+  const stats = {
+    totalLines: lyrics.lines.length,
+    dynamicLines: lyrics.lines.filter(l => l.isDynamic).length,
+    translations: lyrics.lines.filter(l => l.translations.length > 0).length,
+    duration: formatSplTime(
+      lyrics.lines[lyrics.lines.length - 1]?.endTime || 0
+    ),
+    metadata: lyrics.meta
+  }
+  
+  return {
+    success: true,
+    lyrics,
+    stats
+  }
+}
+```
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="SPL Format" icon="file-lines" href="/packages/splash/spl-format">
+    Learn about the SPL format specification
+  </Card>
+  <Card title="Overview" icon="book" href="/packages/splash/overview">
+    Package overview and getting started
+  </Card>
+</CardGroup>

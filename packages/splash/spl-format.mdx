@@ -1,0 +1,360 @@
+---
+title: 'SPL Format Specification'
+description: 'Complete specification for Salt Player Lyric (SPL) format'
+---
+
+# SPL Format Specification
+
+SPL (Salt Player Lyric) is an advanced lyric format based on LRC that extends it with word-level timing support, multiple translations, and enhanced timing control.
+
+## Format Overview
+
+SPL is backward compatible with LRC while adding new features:
+
+- ✅ All valid LRC files are valid SPL files
+- ✅ Word-level timing using `<mm:ss.SSS>` tags
+- ✅ Multiple translations with repeated timestamps
+- ✅ Explicit end times for precise control
+- ✅ Supports both square brackets `[...]` and angle brackets `<...>` for timestamps
+
+## Basic Syntax
+
+### Standard LRC Format
+
+SPL supports all standard LRC features:
+
+```spl
+[ti:Song Title]
+[ar:Artist Name]
+[al:Album Name]
+[by:Creator]
+
+[00:12.00]First line of lyrics
+[00:17.20]Second line of lyrics
+[00:21.10]Third line of lyrics
+```
+
+### Metadata Tags
+
+Metadata tags use the format `[key:value]`:
+
+| Tag | Description | Example |
+|-----|-------------|----------|
+| `ti` | Title | `[ti:Bohemian Rhapsody]` |
+| `ar` | Artist | `[ar:Queen]` |
+| `al` | Album | `[al:A Night at the Opera]` |
+| `by` | Creator | `[by:Freddie Mercury]` |
+| `offset` | Time offset (ms) | `[offset:+500]` |
+
+Custom metadata keys are supported using any alphanumeric string.
+
+### Time Stamps
+
+Time stamps use the format `[mm:ss.SSS]`:
+
+- **Minutes**: 1-3 digits (e.g., `00`, `5`, `120`)
+- **Seconds**: 1-2 digits (e.g., `00`, `5`, `59`)
+- **Milliseconds**: 1-6 digits (e.g., `0`, `123`, `123456`)
+
+```spl
+[00:12.00]    Two decimal places (20ms precision)
+[00:12.000]   Three decimal places (1ms precision)
+[00:12.123456] Six decimal places (microsecond precision)
+[5:30.5]      Flexible formatting (5min 30.5sec)
+```
+
+<Note>
+The parser automatically normalizes timestamps to milliseconds internally.
+</Note>
+
+## Advanced Features
+
+### Word-Level Timing (Dynamic Lyrics)
+
+SPL's most powerful feature is word-level timing using angle brackets `<mm:ss.SSS>`:
+
+```spl
+[00:12.00]Hello<00:12.50> World<00:13.00>
+```
+
+This creates three spans:
+
+1. **"Hello"**: 12.00s - 12.50s (500ms duration)
+2. **" World"**: 12.50s - 13.00s (500ms duration)
+3. Line ends at 13.00s (explicit end time)
+
+#### Parsing Rules
+
+1. **Line start time** is set by the leading `[mm:ss.SSS]` tag
+2. **Word start times** are set by inline `<mm:ss.SSS>` tags
+3. **Word end times** are inferred from the next timestamp
+4. **Line end time** is the last timestamp if followed by no text
+
+```typescript
+import { parseSpl } from '@bbplayer/splash'
+
+const spl = `[00:12.00]Hello<00:12.50> World<00:13.00>`
+const result = parseSpl(spl)
+
+console.log(result.lines[0].spans)
+// [
+//   { text: "Hello", startTime: 12000, endTime: 12500, duration: 500 },
+//   { text: " World", startTime: 12500, endTime: 13000, duration: 500 }
+// ]
+```
+
+### Implicit vs Explicit End Times
+
+#### Implicit End Time
+
+If a line has trailing text after the last timestamp, the end time is inferred:
+
+```spl
+[00:12.00]Hello<00:12.50> World
+[00:15.00]Next line
+```
+
+- Line 1 ends at 15.00s (start of next line)
+- If no next line exists, defaults to +10 seconds
+
+#### Explicit End Time
+
+If the last timestamp has no following text, it's treated as an explicit end:
+
+```spl
+[00:12.00]Hello<00:12.50> World<00:13.00>
+[00:15.00]Next line
+```
+
+- Line 1 explicitly ends at 13.00s
+- Gap between 13.00s and 15.00s (instrumental break)
+
+### Multiple Translations
+
+SPL supports multiple translation lines per timestamp:
+
+#### Explicit Translation (Same Timestamp)
+
+```spl
+[00:12.00]Hello World
+[00:12.00]你好世界
+[00:12.00]こんにちは世界
+```
+
+All lines with the same timestamp are grouped:
+
+```typescript
+{
+  startTime: 12000,
+  content: "Hello World",
+  translations: ["你好世界", "こんにちは世界"]
+}
+```
+
+#### Implicit Translation (No Timestamp)
+
+Lines without timestamps are attached to the previous timestamped line:
+
+```spl
+[00:12.00]Hello World
+你好世界
+こんにちは世界
+```
+
+This produces the same result as explicit translation.
+
+### Repeated Lines
+
+Multiple timestamps on one line create repeated entries:
+
+```spl
+[00:12.00][00:24.00]Chorus line
+```
+
+This creates two separate `LyricLine` objects:
+
+```typescript
+[
+  { startTime: 12000, content: "Chorus line", ... },
+  { startTime: 24000, content: "Chorus line", ... }
+]
+```
+
+#### Repeated Lines with Implicit Translation
+
+```spl
+[00:12.00][00:24.00]Chorus line
+Translation
+```
+
+The translation applies to both instances:
+
+```typescript
+[
+  { startTime: 12000, content: "Chorus line", translations: ["Translation"] },
+  { startTime: 24000, content: "Chorus line", translations: ["Translation"] }
+]
+```
+
+## Complete Example
+
+```spl
+[ti:Example Song]
+[ar:Example Artist]
+[al:Example Album]
+[by:Lyric Creator]
+
+[00:00.00]Instrumental intro<00:05.00>
+[00:05.50]First<00:06.00> verse<00:06.50> begins<00:07.50>
+第一段开始
+[00:10.00]Second verse here
+Second verse translation
+[00:15.00][00:30.00]Repeated chorus line
+Chorus translation
+[00:20.00]Bridge section<00:25.00>
+```
+
+Parsing this produces:
+
+```typescript
+{
+  meta: {
+    ti: "Example Song",
+    ar: "Example Artist",
+    al: "Example Album",
+    by: "Lyric Creator"
+  },
+  lines: [
+    {
+      startTime: 0,
+      endTime: 5000,
+      content: "Instrumental intro",
+      translations: [],
+      isDynamic: true,
+      spans: [{ text: "Instrumental intro", startTime: 0, endTime: 5000, duration: 5000 }]
+    },
+    {
+      startTime: 5500,
+      endTime: 7500,
+      content: "First verse begins",
+      translations: ["第一段开始"],
+      isDynamic: true,
+      spans: [
+        { text: "First", startTime: 5500, endTime: 6000, duration: 500 },
+        { text: " verse", startTime: 6000, endTime: 6500, duration: 500 },
+        { text: " begins", startTime: 6500, endTime: 7500, duration: 1000 }
+      ]
+    },
+    // ... more lines
+  ]
+}
+```
+
+## Edge Cases
+
+### Negative Timestamps
+
+Negative timestamps are clamped to 0:
+
+```spl
+[-1:-1.000]Pre-song content
+```
+
+Becomes:
+
+```typescript
+{ startTime: 0, content: "Pre-song content", ... }
+```
+
+### Backward Time Tags
+
+Time tags that go backward are ignored with a warning:
+
+```spl
+[00:12.00]Hello<00:11.00>World
+```
+
+The `<00:11.00>` tag is ignored since it's before the current time.
+
+### Orphaned Text
+
+Text without any timestamp (and not following a timestamped line) throws an error:
+
+```spl
+Orphaned text without timestamp
+```
+
+Throws `SplParseError: 第 1 行解析错误: 未找到时间戳，且无法关联到上一行`
+
+### Empty Lines
+
+Empty lines and whitespace-only lines are ignored:
+
+```spl
+[00:12.00]Line 1
+
+    
+[00:15.00]Line 2
+```
+
+Produces only two lyric lines.
+
+## Validation
+
+Use the `verify` function to validate SPL content:
+
+```typescript
+import { verify } from '@bbplayer/splash'
+
+const result = verify(splContent)
+
+if (result.isValid) {
+  console.log('Valid SPL file')
+} else {
+  console.error(`Invalid SPL at line ${result.error.line}: ${result.error.message}`)
+}
+```
+
+## Best Practices
+
+### For Static Lyrics (LRC)
+
+```spl
+[ti:Song Title]
+[ar:Artist]
+[00:12.00]First line
+[00:17.50]Second line
+```
+
+### For Dynamic Lyrics (Word-by-Word)
+
+```spl
+[ti:Song Title]
+[ar:Artist]
+[00:12.00]First<00:12.30> line<00:12.80><00:13.00>
+[00:17.50]Second<00:17.80> line<00:18.30><00:19.00>
+```
+
+<Note>
+Always include explicit end tags `<mm:ss.SSS>` for word-level lyrics to avoid relying on inferred timing.
+</Note>
+
+### For Translated Lyrics
+
+```spl
+[00:12.00]Original line
+[00:12.00]Translation line
+```
+
+Or use implicit translation:
+
+```spl
+[00:12.00]Original line
+Translation line
+```
+
+## Resources
+
+- [Official SPL Specification](https://bbplayer.roitium.com/SPL)
+- [API Reference](/packages/splash/api)
+- [Package Overview](/packages/splash/overview)

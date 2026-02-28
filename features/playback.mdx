@@ -1,0 +1,306 @@
+---
+title: 'Playback Engine'
+description: 'Full-featured audio player with gapless playback, loudness equalization, and advanced controls'
+---
+
+BBPlayer features a custom-built playback engine called **Orpheus**, providing professional-grade audio playback with advanced features typically found in desktop players.
+
+## Core Features
+
+The Orpheus playback engine is built on native audio frameworks for optimal performance and reliability.
+
+### Gapless Playback
+
+Seamless transitions between tracks with zero gaps or clicks.
+
+<Info>
+Gapless playback is enabled by default and works automatically for all audio formats. The engine pre-loads the next track while the current one is playing.
+</Info>
+
+**Technical Implementation:**
+- Pre-buffering of next track before current track ends
+- Sample-accurate timing for crossfade points
+- Maintains audio pipeline state across track boundaries
+- Supports all common audio codecs (AAC, MP3, FLAC, etc.)
+
+### Loudness Normalization
+
+Automatic volume leveling across tracks to maintain consistent perceived loudness.
+
+<Steps>
+  <Step title="Enable Feature">
+    Navigate to **Settings > Playback** and toggle **"响度均衡（实验性）"** (Loudness Equalization).
+  </Step>
+  
+  <Step title="How It Works">
+    The engine analyzes each track's loudness metadata and applies real-time gain adjustment to match a target level.
+    
+    <Note>
+    This feature is marked as experimental. It uses dynamic range compression and may affect audio quality for some tracks.
+    </Note>
+  </Step>
+</Steps>
+
+```typescript
+// Enable loudness normalization (apps/mobile/src/app/settings/playback.tsx:63-64)
+Orpheus.loudnessNormalizationEnabled = true
+```
+
+### Playback Position Restoration
+
+Automatically resume playback from where you left off, even after closing the app.
+
+<Accordion title="Position Persistence">
+  - Saves current position every few seconds
+  - Restores position on app restart
+  - Works across app updates
+  - Remembers position per track
+</Accordion>
+
+<Accordion title="Auto-resume Playback">
+  Enable **"在应用启动时恢复上次播放进度"** in Settings > Playback to automatically continue playing when you reopen the app.
+  
+  <Warning>
+  The settings description warns this is **"易社死"** (easily embarrassing), as it will immediately resume audio when launching the app.
+  </Warning>
+</Accordion>
+
+## Player Controls
+
+The player interface provides comprehensive playback controls with a modern, gesture-driven design.
+
+### Main Player Screen
+
+The full-screen player (`apps/mobile/src/app/player.tsx`) features:
+
+<Tabs>
+  <Tab title="Main Tab">
+    - **Album artwork** with dynamic theme colors
+    - **Progress bar** with seek gesture support
+    - **Play/Pause, Previous, Next** controls
+    - **Shuffle and Repeat** mode toggles
+    - **Queue access** button
+    - **Playback speed** control
+    - **Danmaku (bullet comments)** display
+  </Tab>
+  
+  <Tab title="Lyrics Tab">
+    - Full-screen scrolling lyrics
+    - Word-by-word progress highlighting
+    - Translation display
+    - Tap to seek to specific line
+    - Background tap to return to Main tab
+  </Tab>
+</Tabs>
+
+### Background Styles
+
+Customize the player's visual appearance:
+
+<Accordion title="Gradient Mode">
+  Extracts dominant color from album artwork and creates a gradient background that animates smoothly between tracks.
+  
+  ```typescript
+  // Color extraction (apps/mobile/src/app/player.tsx:154-174)
+  ImageThemeColors.extractThemeColorAsync(coverRef)
+    .then((palette) => {
+      const topColor = colorScheme === 'dark'
+        ? palette.darkMuted?.hex ?? palette.muted?.hex
+        : palette.lightMuted?.hex ?? palette.muted?.hex
+      
+      gradientMainColor.set(withTiming(topColor, { duration: 400 }))
+    })
+  ```
+</Accordion>
+
+<Accordion title="Material Design 3 (MD3)">
+  Uses system theme colors for a consistent appearance with the rest of the app.
+</Accordion>
+
+### Queue Management
+
+Access the playback queue through the bottom sheet modal:
+
+- View upcoming tracks
+- Reorder queue items with drag-and-drop
+- Remove tracks from queue
+- Jump to any track in queue
+- View queue history
+
+## Playback Modes
+
+Control how tracks progress through your playlist:
+
+### Repeat Modes
+
+<Tabs>
+  <Tab title="Repeat Off">
+    Play through the queue once and stop.
+  </Tab>
+  
+  <Tab title="Repeat All">
+    Loop the entire queue continuously.
+  </Tab>
+  
+  <Tab title="Repeat One">
+    Loop the current track indefinitely.
+  </Tab>
+</Tabs>
+
+### Shuffle Mode
+
+<Info>
+Shuffle creates a randomized playback order while maintaining the original queue. Toggling shuffle off restores the original order.
+</Info>
+
+## Advanced Playback Features
+
+### Headless Playback
+
+Orpheus supports background playback with headless task execution:
+
+```typescript
+// Headless task registration (packages/orpheus/src/headless.ts:7-37)
+registerOrpheusHeadlessTask(async (event) => {
+  switch (event.eventName) {
+    case 'onTrackStarted':
+      // Handle track start
+      break
+    case 'onTrackFinished':
+      // Handle track completion
+      break
+    case 'onTrackResumed':
+      // Handle resume from pause
+      break
+    case 'onTrackPaused':
+      // Handle pause
+      break
+  }
+})
+```
+
+**Platform Differences:**
+- **iOS**: Events bridged from Native Module to JavaScript
+- **Android**: Uses Android Headless Task Service natively
+
+### Media Session Integration
+
+- **Lock screen controls**: Play/pause, skip, artwork display
+- **Notification controls**: Persistent playback notification with actions
+- **Bluetooth/car integration**: Responds to external media controls
+- **Now Playing info**: Displays current track in system media player
+
+### Audio Focus Management
+
+<Accordion title="Android Audio Focus">
+  - Automatically pauses when other apps request audio focus
+  - Ducks volume during navigation prompts
+  - Resumes playback when focus regained
+</Accordion>
+
+<Accordion title="iOS Audio Session">
+  - Configures audio session category for background playback
+  - Handles interruptions (calls, alarms)
+  - Integrates with Control Center
+</Accordion>
+
+## Playback Settings
+
+All playback settings are accessible from **Settings > Playback**:
+
+<Note>
+Changes to most playback settings take effect immediately without requiring an app restart.
+</Note>
+
+### Available Settings
+
+| Setting | Description | Default |
+|---------|-------------|----------|
+| **恢复播放进度** | Restore playback position on app start | Enabled |
+| **响度均衡** | Loudness normalization (experimental) | Disabled |
+| **启动时自动播放** | Auto-resume playback on launch | Disabled |
+| **弹幕设置** | Configure bullet comment display | Separate modal |
+
+## Performance Optimization
+
+### Memory Management
+
+- Efficient audio buffer management
+- Automatic cache cleanup
+- Minimal battery impact during playback
+
+### Network Optimization
+
+- Adaptive bitrate selection based on connection quality
+- Intelligent pre-buffering strategy
+- Resume support for interrupted downloads
+
+### CPU Usage
+
+<Info>
+The Orpheus engine uses hardware audio decoding when available, minimizing CPU usage and extending battery life.
+</Info>
+
+## Troubleshooting
+
+### Audio Stuttering or Skipping
+
+- Disable loudness normalization
+- Check network connection quality
+- Clear app cache
+- Reduce background app activity
+
+### Playback Position Not Restoring
+
+- Verify setting is enabled in Settings > Playback
+- Ensure app has storage permissions
+- Check if track is still available (not deleted)
+
+### Gapless Playback Has Gaps
+
+- Verify audio files are not corrupted
+- Check if network connection is stable
+- Some audio formats may have inherent limitations
+
+### Background Playback Stops
+
+- Check battery optimization settings for BBPlayer
+- Verify notification permission is granted
+- Ensure "Background App Refresh" is enabled (iOS)
+
+## Technical Architecture
+
+The Orpheus playback engine is implemented as a native module:
+
+```
+packages/orpheus/
+├── src/
+│   ├── ExpoOrpheusModule.ts    # TypeScript/JS interface
+│   ├── headless.ts              # Background task support
+│   └── hooks/                   # React hooks for state
+├── ios/                         # Native iOS implementation
+└── android/                     # Native Android implementation
+```
+
+### API Surface
+
+The Orpheus module exposes a clean API for playback control:
+
+```typescript
+// Core playback methods
+Orpheus.play()
+Orpheus.pause()
+Orpheus.skipToNext()
+Orpheus.skipToPrevious()
+Orpheus.seekTo(positionMs)
+
+// Queue management
+Orpheus.setQueue(tracks)
+Orpheus.addToQueue(track)
+Orpheus.removeFromQueue(index)
+
+// Settings
+Orpheus.loudnessNormalizationEnabled = true
+Orpheus.restorePlaybackPositionEnabled = true
+Orpheus.autoplayOnStartEnabled = false
+```

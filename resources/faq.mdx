@@ -1,0 +1,241 @@
+---
+title: Frequently Asked Questions
+description: Common questions about BBPlayer features, platform support, and usage
+icon: circle-question
+---
+
+## Platform Support
+
+<Accordion title="Is iOS supported?">
+  BBPlayer previously had basic iOS adaptation, but development is currently focused on Android.
+  
+  <Warning>
+    The iOS version is not actively maintained and may not compile successfully. We cannot guarantee iOS functionality at this time.
+  </Warning>
+  
+  The development team's focus remains on the Android platform, where BBPlayer provides the best experience.
+</Accordion>
+
+<Accordion title="Which Android devices are supported?">
+  BBPlayer supports modern Android devices running Android 6.0 (API 23) or higher.
+  
+  **Recommended Architecture:** arm64-v8a (covers most modern smartphones)
+  
+  **Also Available:**
+  - armeabi-v7a (older devices)
+  - x86/x86_64 (Android emulators)
+  
+  For the best experience, use a device with at least 2GB of RAM.
+</Accordion>
+
+## Privacy & Data Collection
+
+<Accordion title="What data does BBPlayer collect?">
+  BBPlayer uses a lightweight anonymous data collection system to improve the app.
+  
+  **Usage Data:**
+  - Feature usage frequency
+  - Playback session duration
+  - General app interaction patterns
+  
+  **Crash Reports:**
+  - Stack traces when the app crashes
+  - Device and OS information for debugging
+  
+  <Info>
+    All data is **completely anonymous** and does not include:
+    - Account credentials or cookies
+    - Bilibili account information
+    - Browsing or listening history details
+    - Personal identification information
+  </Info>
+  
+  Learn more in the [Privacy Policy](/resources/privacy).
+</Accordion>
+
+<Accordion title="Can I disable data collection?">
+  Yes! You have full control over data collection.
+  
+  **To disable all data collection:**
+  
+  1. Open **Settings** (设置)
+  2. Go to **General** (通用设置)
+  3. Toggle off **"Share Data (Crash Reports & Anonymous Stats)"** (分享数据)
+  
+  <Note>
+    Disabling this setting will stop all analytics and crash reporting. The app will continue to work normally.
+  </Note>
+</Accordion>
+
+<Accordion title="Where can I see the data collection code?">
+  BBPlayer is fully open source! You can review all analytics and data collection code on GitHub:
+  
+  - [Analytics Service](https://github.com/bbplayer-app/bbplayer/blob/master/apps/mobile/src/lib/services/analyticsService.ts)
+  - [Sentry Configuration](https://github.com/bbplayer-app/bbplayer/blob/master/apps/mobile/src/lib/config/sentry.ts)
+  
+  The codebase is transparent and available for audit.
+</Accordion>
+
+## Features & Functionality
+
+<Accordion title="What are BBPlayer's main features?">
+  BBPlayer is a local-first Bilibili audio player with comprehensive features:
+  
+  **Core Playback:**
+  - Bilibili login via QR code or cookies
+  - Access to favorites, subscriptions, and custom playlists
+  - Import playlists from NetEase Cloud Music and QQ Music
+  - Full-featured player with shuffle, repeat, queue, loudness normalization
+  - Resume playback from where you left off
+  - Danmaku (comments) display on the player screen
+  
+  **Lyrics System:**
+  - Support for SPL format with word-by-word progress, romaji, and translations
+  - Auto-match lyrics from NetEase, QQ Music, and Kugou
+  - Desktop lyrics (floating window)
+  - Lyrics sharing cards
+  
+  **Download & Export:**
+  - Cache songs for offline playback
+  - Export cached songs as .m4a files with cover art, metadata, and embedded lyrics
+  
+  **UI & Experience:**
+  - Light/dark mode with Material Design 3
+  - Dynamic color theming (Monet)
+  - Sleep timer
+  - Playback statistics and rankings
+</Accordion>
+
+<Accordion title="How do I import playlists from other platforms?">
+  BBPlayer supports importing playlists from **NetEase Cloud Music** and **QQ Music**.
+  
+  The app will automatically match songs to Bilibili videos and save them as local playlists.
+  
+  <Info>
+    This feature was introduced in version 2.3.0. Check out the [Changelog](/resources/changelog) for details.
+  </Info>
+</Accordion>
+
+<Accordion title="What is SPL and why does it matter?">
+  SPL (Song Lyric) is a lyrics format specification developed by BBPlayer that supports:
+  
+  - **Word-by-word progress**: Karaoke-style synchronized lyrics
+  - **Romaji annotations**: Pronunciation guides for Japanese songs
+  - **Translation display**: Multiple language support
+  
+  Learn more in the [SPL Specification](https://bbplayer.roitium.com/SPL).
+</Accordion>
+
+<Accordion title="Can I download songs for offline playback?">
+  Yes! BBPlayer supports:
+  
+  - **Caching songs** for offline playback within the app
+  - **Exporting cached songs** as .m4a files to your device storage
+  
+  Exported files include:
+  - Cover art
+  - Metadata (title, artist, etc.)
+  - Embedded lyrics
+  
+  <Note>
+    Make sure to download missing cover images if you previously cached songs. Go to **Settings > General** and tap **"Download Missing Covers"**.
+  </Note>
+</Accordion>
+
+<Accordion title="Does BBPlayer support danmaku (comments)?">
+  Yes! Starting from version 2.3.0, BBPlayer displays Bilibili danmaku directly on the player screen.
+  
+  This brings the authentic Bilibili experience to your music listening sessions.
+</Accordion>
+
+## Technical Questions
+
+<Accordion title="What technology stack does BBPlayer use?">
+  BBPlayer is built with modern React Native technologies:
+  
+  **Framework:**
+  - React Native with Expo
+  - Expo Router for navigation
+  
+  **State & Data:**
+  - Zustand for state management
+  - React Query for data fetching
+  - Drizzle ORM for database
+  
+  **UI:**
+  - Material Design 3 (React Native Paper)
+  - React Native Reanimated for animations
+  
+  **Audio:**
+  - @bbplayer/orpheus (custom player based on Media3)
+  
+  View the full tech stack in the [README](https://github.com/bbplayer-app/bbplayer#技术栈).
+</Accordion>
+
+<Accordion title="Is BBPlayer open source?">
+  Yes! BBPlayer is fully open source under the MIT License.
+  
+  **GitHub Repository:** [bbplayer-app/bbplayer](https://github.com/bbplayer-app/bbplayer)
+  
+  <Info>
+    Contributions are welcome! The project uses a monorepo structure with shared packages and libraries.
+  </Info>
+</Accordion>
+
+<Accordion title="How do I report bugs or request features?">
+  Use GitHub Issues to report bugs or request features:
+  
+  - **Bug Reports:** [Create an issue](https://github.com/bbplayer-app/bbplayer/issues/new)
+  - **Feature Requests:** [Create an issue](https://github.com/bbplayer-app/bbplayer/issues/new)
+  
+  For privacy-related questions, email [me@roitium.com](mailto:me@roitium.com).
+</Accordion>
+
+## Installation & Updates
+
+<Accordion title="Which APK file should I download?">
+  Choose the APK based on your device architecture:
+  
+  | File | Architecture | Device Type |
+  |------|-------------|-------------|
+  | **bbplayer-vX.X.X-prod-arm64-v8a.apk** | arm64-v8a | **Recommended** - Most modern Android phones |
+  | bbplayer-vX.X.X-prod-armeabi-v7a.apk | armeabi-v7a | Older devices (several years old) or budget phones |
+  | bbplayer-vX.X.X-prod-x86.apk | x86 | Android emulators on PC |
+  | bbplayer-vX.X.X-prod-x86_64.apk | x86_64 | 64-bit Android emulators |
+  
+  <Info>
+    If you're unsure, download the **arm64-v8a** version - it works on the vast majority of modern smartphones.
+  </Info>
+</Accordion>
+
+<Accordion title="How do I update BBPlayer?">
+  1. Download the latest APK from [GitHub Releases](https://github.com/bbplayer-app/bbplayer/releases)
+  2. Install the APK over your existing installation
+  3. Your data and settings will be preserved
+  
+  <Note>
+    Check the [Changelog](/resources/changelog) for new features and fixes in each version.
+  </Note>
+</Accordion>
+
+## Support & Community
+
+<Accordion title="How can I support BBPlayer development?">
+  If BBPlayer has been helpful to you, consider supporting the developer:
+  
+  - **Star the project** on [GitHub](https://github.com/bbplayer-app/bbplayer)
+  - **Contribute** code, translations, or documentation
+  - **Donate** to help the developer buy dinner or games (donation QR codes available in the app)
+  
+  <Info>
+    All donations help support continued development and maintenance of BBPlayer.
+  </Info>
+</Accordion>
+
+<Accordion title="Where can I see BBPlayer's development roadmap?">
+  Follow the project development:
+  
+  - **GitHub Issues:** [Open issues and feature requests](https://github.com/bbplayer-app/bbplayer/issues)
+  - **GitHub Releases:** [Version history and updates](https://github.com/bbplayer-app/bbplayer/releases)
+  - **Changelog:** [Detailed version history](/resources/changelog)
+</Accordion>

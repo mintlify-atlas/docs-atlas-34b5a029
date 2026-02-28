@@ -1,0 +1,1305 @@
+---
+title: 'API Reference'
+description: 'Complete API documentation for @bbplayer/orpheus with all methods, types, and events'
+---
+
+# API Reference
+
+Complete API reference for `@bbplayer/orpheus` including the native module, React hooks, enums, interfaces, and event system.
+
+## Module Export
+
+```typescript
+import { Orpheus } from '@bbplayer/orpheus'
+```
+
+The `Orpheus` object is the main native module instance providing all playback functionality.
+
+## Properties
+
+### restorePlaybackPositionEnabled
+
+```typescript
+Orpheus.restorePlaybackPositionEnabled: boolean
+```
+
+Enables automatic restoration of playback position on app restart.
+
+### loudnessNormalizationEnabled
+
+```typescript
+Orpheus.loudnessNormalizationEnabled: boolean
+```
+
+Enables ReplayGain-style loudness normalization (Android only).
+
+### autoplayOnStartEnabled
+
+```typescript
+Orpheus.autoplayOnStartEnabled: boolean
+```
+
+Automatically resumes playback when the app starts.
+
+### isDesktopLyricsShown
+
+```typescript
+Orpheus.isDesktopLyricsShown: boolean
+```
+
+Returns whether desktop lyrics window is currently visible (Android only).
+
+### isDesktopLyricsLocked
+
+```typescript
+Orpheus.isDesktopLyricsLocked: boolean
+```
+
+Returns whether desktop lyrics window is locked against dragging (Android only).
+
+## Playback Methods
+
+### play()
+
+```typescript
+play(): Promise<void>
+```
+
+Starts or resumes playback.
+
+```typescript
+await Orpheus.play()
+```
+
+### pause()
+
+```typescript
+pause(): Promise<void>
+```
+
+Pauses playback.
+
+```typescript
+await Orpheus.pause()
+```
+
+### seekTo()
+
+```typescript
+seekTo(seconds: number): Promise<void>
+```
+
+Seeks to a specific position in seconds.
+
+<ParamField path="seconds" type="number" required>
+  Target position in seconds
+</ParamField>
+
+```typescript
+await Orpheus.seekTo(120) // Seek to 2:00
+```
+
+### getPosition()
+
+```typescript
+getPosition(): Promise<number>
+```
+
+Returns the current playback position in seconds.
+
+```typescript
+const position = await Orpheus.getPosition()
+```
+
+### getDuration()
+
+```typescript
+getDuration(): Promise<number>
+```
+
+Returns the total duration of the current track in seconds.
+
+```typescript
+const duration = await Orpheus.getDuration()
+```
+
+### getBuffered()
+
+```typescript
+getBuffered(): Promise<number>
+```
+
+Returns the buffered position in seconds.
+
+```typescript
+const buffered = await Orpheus.getBuffered()
+```
+
+### getIsPlaying()
+
+```typescript
+getIsPlaying(): Promise<boolean>
+```
+
+Returns whether playback is currently active.
+
+```typescript
+const isPlaying = await Orpheus.getIsPlaying()
+```
+
+## Queue Methods
+
+### addToEnd()
+
+```typescript
+addToEnd(
+  tracks: Track[],
+  startFromId?: string,
+  clearQueue?: boolean
+): Promise<void>
+```
+
+Adds tracks to the end of the queue without deduplication.
+
+<ParamField path="tracks" type="Track[]" required>
+  Array of tracks to add
+</ParamField>
+
+<ParamField path="startFromId" type="string">
+  Optional track ID to start playing immediately after adding
+</ParamField>
+
+<ParamField path="clearQueue" type="boolean">
+  Whether to clear the existing queue before adding
+</ParamField>
+
+```typescript
+await Orpheus.addToEnd(
+  [track1, track2, track3],
+  track1.id,  // Start playing track1
+  true        // Clear existing queue
+)
+```
+
+### playNext()
+
+```typescript
+playNext(track: Track): Promise<void>
+```
+
+Inserts a track to play immediately after the current track.
+
+<ParamField path="track" type="Track" required>
+  Track to insert as next
+</ParamField>
+
+```typescript
+await Orpheus.playNext(track)
+```
+
+### removeTrack()
+
+```typescript
+removeTrack(index: number): Promise<void>
+```
+
+Removes a track from the queue by index.
+
+<ParamField path="index" type="number" required>
+  Zero-based queue index
+</ParamField>
+
+```typescript
+await Orpheus.removeTrack(3)
+```
+
+### clear()
+
+```typescript
+clear(): Promise<void>
+```
+
+Clears the entire playback queue.
+
+```typescript
+await Orpheus.clear()
+```
+
+### getQueue()
+
+```typescript
+getQueue(): Promise<Track[]>
+```
+
+Returns the current playback queue.
+
+```typescript
+const queue = await Orpheus.getQueue()
+```
+
+### getCurrentTrack()
+
+```typescript
+getCurrentTrack(): Promise<Track | null>
+```
+
+Returns the currently playing track, or `null` if none.
+
+```typescript
+const track = await Orpheus.getCurrentTrack()
+if (track) {
+  console.log('Now playing:', track.title)
+}
+```
+
+### getCurrentIndex()
+
+```typescript
+getCurrentIndex(): Promise<number>
+```
+
+Returns the current queue index.
+
+```typescript
+const index = await Orpheus.getCurrentIndex()
+```
+
+### getIndexTrack()
+
+```typescript
+getIndexTrack(index: number): Promise<Track | null>
+```
+
+Returns the track at a specific queue index.
+
+<ParamField path="index" type="number" required>
+  Zero-based queue index
+</ParamField>
+
+```typescript
+const track = await Orpheus.getIndexTrack(5)
+```
+
+### skipTo()
+
+```typescript
+skipTo(index: number): Promise<void>
+```
+
+Skips to a specific track by queue index.
+
+<ParamField path="index" type="number" required>
+  Zero-based queue index to skip to
+</ParamField>
+
+```typescript
+await Orpheus.skipTo(7)
+```
+
+### skipToNext()
+
+```typescript
+skipToNext(): Promise<void>
+```
+
+Skips to the next track in the queue.
+
+```typescript
+await Orpheus.skipToNext()
+```
+
+### skipToPrevious()
+
+```typescript
+skipToPrevious(): Promise<void>
+```
+
+Skips to the previous track in the queue.
+
+```typescript
+await Orpheus.skipToPrevious()
+```
+
+## Repeat and Shuffle
+
+### setRepeatMode()
+
+```typescript
+setRepeatMode(mode: RepeatMode): Promise<void>
+```
+
+Sets the repeat mode.
+
+<ParamField path="mode" type="RepeatMode" required>
+  One of: `RepeatMode.OFF`, `RepeatMode.TRACK`, `RepeatMode.QUEUE`
+</ParamField>
+
+```typescript
+import { RepeatMode } from '@bbplayer/orpheus'
+await Orpheus.setRepeatMode(RepeatMode.QUEUE)
+```
+
+### getRepeatMode()
+
+```typescript
+getRepeatMode(): Promise<RepeatMode>
+```
+
+Returns the current repeat mode.
+
+```typescript
+const mode = await Orpheus.getRepeatMode()
+```
+
+### setShuffleMode()
+
+```typescript
+setShuffleMode(enabled: boolean): Promise<void>
+```
+
+Enables or disables shuffle mode.
+
+<ParamField path="enabled" type="boolean" required>
+  Whether to enable shuffle
+</ParamField>
+
+```typescript
+await Orpheus.setShuffleMode(true)
+```
+
+### getShuffleMode()
+
+```typescript
+getShuffleMode(): Promise<boolean>
+```
+
+Returns whether shuffle mode is enabled.
+
+```typescript
+const shuffled = await Orpheus.getShuffleMode()
+```
+
+## Bilibili Integration
+
+### setBilibiliCookie()
+
+```typescript
+setBilibiliCookie(cookie: string): void
+```
+
+Sets the authentication cookie for Bilibili API requests.
+
+<ParamField path="cookie" type="string" required>
+  Full cookie string including SESSDATA
+</ParamField>
+
+```typescript
+Orpheus.setBilibiliCookie('SESSDATA=abc123; buvid3=xyz...')
+```
+
+## Download Methods
+
+### downloadTrack()
+
+```typescript
+downloadTrack(track: Track): Promise<void>
+```
+
+Downloads a single track for offline playback.
+
+<ParamField path="track" type="Track" required>
+  Track to download
+</ParamField>
+
+```typescript
+await Orpheus.downloadTrack(track)
+```
+
+### multiDownload()
+
+```typescript
+multiDownload(tracks: Track[]): Promise<void>
+```
+
+Batch downloads multiple tracks.
+
+<ParamField path="tracks" type="Track[]" required>
+  Array of tracks to download
+</ParamField>
+
+```typescript
+await Orpheus.multiDownload([track1, track2, track3])
+```
+
+### removeDownload()
+
+```typescript
+removeDownload(id: string): Promise<void>
+```
+
+Removes a download task and its downloaded file.
+
+<ParamField path="id" type="string" required>
+  Track ID to remove
+</ParamField>
+
+```typescript
+await Orpheus.removeDownload('track-id')
+```
+
+### removeDownloads()
+
+```typescript
+removeDownloads(ids: string[]): Promise<void>
+```
+
+Batch removes multiple download tasks.
+
+<ParamField path="ids" type="string[]" required>
+  Array of track IDs to remove
+</ParamField>
+
+```typescript
+await Orpheus.removeDownloads(['id1', 'id2', 'id3'])
+```
+
+### removeAllDownloads()
+
+```typescript
+removeAllDownloads(): Promise<void>
+```
+
+Removes all download tasks including completed files.
+
+```typescript
+await Orpheus.removeAllDownloads()
+```
+
+### getDownloads()
+
+```typescript
+getDownloads(): Promise<DownloadTask[]>
+```
+
+Returns all download tasks.
+
+<ResponseField name="DownloadTask[]" type="array">
+  Array of download task objects
+</ResponseField>
+
+```typescript
+const downloads = await Orpheus.getDownloads()
+downloads.forEach(task => {
+  console.log(`${task.track?.title}: ${task.percentDownloaded}%`)
+})
+```
+
+### getDownloadStatusByIds()
+
+```typescript
+getDownloadStatusByIds(ids: string[]): Promise<Record<string, DownloadState>>
+```
+
+Returns download states for specific track IDs.
+
+<ParamField path="ids" type="string[]" required>
+  Track IDs to query
+</ParamField>
+
+```typescript
+const statuses = await Orpheus.getDownloadStatusByIds(['id1', 'id2'])
+console.log(statuses) // { 'id1': DownloadState.COMPLETED, 'id2': DownloadState.DOWNLOADING }
+```
+
+### clearUncompletedDownloadTasks()
+
+```typescript
+clearUncompletedDownloadTasks(): Promise<void>
+```
+
+Removes all incomplete download tasks (keeps completed downloads).
+
+```typescript
+await Orpheus.clearUncompletedDownloadTasks()
+```
+
+### getUncompletedDownloadTasks()
+
+```typescript
+getUncompletedDownloadTasks(): Promise<DownloadTask[]>
+```
+
+Returns only incomplete download tasks.
+
+```typescript
+const pending = await Orpheus.getUncompletedDownloadTasks()
+```
+
+### downloadMissingCovers()
+
+```typescript
+downloadMissingCovers(): Promise<number>
+```
+
+Downloads cover art for tracks that have audio but no cover.
+
+<ResponseField name="count" type="number">
+  Number of covers started downloading
+</ResponseField>
+
+```typescript
+const count = await Orpheus.downloadMissingCovers()
+console.log(`Downloading ${count} covers`)
+```
+
+### getDownloadedCoverUri()
+
+```typescript
+getDownloadedCoverUri(trackId: string): string | null
+```
+
+Returns the local file URI for a downloaded cover, or `null` if not available.
+
+<ParamField path="trackId" type="string" required>
+  Track ID to query
+</ParamField>
+
+```typescript
+const uri = Orpheus.getDownloadedCoverUri('track-id')
+if (uri) {
+  console.log('Cover at:', uri) // file:///...
+}
+```
+
+## Export Methods (Android)
+
+### selectDirectory()
+
+```typescript
+selectDirectory(): Promise<string | null>
+```
+
+Opens Android's directory picker and returns the selected SAF URI.
+
+<ResponseField name="uri" type="string | null">
+  SAF URI string, or `null` if cancelled
+</ResponseField>
+
+```typescript
+const uri = await Orpheus.selectDirectory()
+if (uri) {
+  console.log('Selected:', uri)
+}
+```
+
+### exportDownloads()
+
+```typescript
+exportDownloads(
+  ids: string[],
+  destinationUri: string,
+  filenamePattern: string | null,
+  embedLyrics: boolean,
+  convertToLrc: boolean,
+  cropCoverArt: boolean
+): Promise<void>
+```
+
+Batch exports downloaded tracks with metadata embedding.
+
+<ParamField path="ids" type="string[]" required>
+  Track IDs to export
+</ParamField>
+
+<ParamField path="destinationUri" type="string" required>
+  SAF directory URI from `selectDirectory()`
+</ParamField>
+
+<ParamField path="filenamePattern" type="string | null" required>
+  Filename template using variables: `{id}`, `{name}`, `{artist}`, `{bvid}`, `{cid}`
+</ParamField>
+
+<ParamField path="embedLyrics" type="boolean" required>
+  Whether to embed cached lyrics into M4A metadata
+</ParamField>
+
+<ParamField path="convertToLrc" type="boolean" required>
+  Convert SPL lyrics to standard LRC (only if embedLyrics is true)
+</ParamField>
+
+<ParamField path="cropCoverArt" type="boolean" required>
+  Crop cover art to square aspect ratio
+</ParamField>
+
+```typescript
+const uri = await Orpheus.selectDirectory()
+if (uri) {
+  await Orpheus.exportDownloads(
+    ['id1', 'id2'],
+    uri,
+    '{artist} - {name}',
+    true,   // Embed lyrics
+    false,  // Keep SPL format
+    false   // Keep original aspect ratio
+  )
+}
+```
+
+## Cache Methods
+
+### getLruCachedUris()
+
+```typescript
+getLruCachedUris(uris: string[]): string[]
+```
+
+Checks which URIs are fully cached in the LRU stream cache.
+
+<ParamField path="uris" type="string[]" required>
+  Array of orpheus:// URIs to check
+</ParamField>
+
+<ResponseField name="cachedUris" type="string[]">
+  Subset of input URIs that are fully cached
+</ResponseField>
+
+```typescript
+const cached = Orpheus.getLruCachedUris([
+  'orpheus://bilibili?bvid=BV1xx411c7mD&cid=123456789',
+  'orpheus://bilibili?bvid=BV1yy422c8mE&cid=987654321'
+])
+console.log('Cached:', cached)
+```
+
+## Desktop Lyrics Methods (Android)
+
+### checkOverlayPermission()
+
+```typescript
+checkOverlayPermission(): Promise<boolean>
+```
+
+Checks if overlay permission is granted.
+
+```typescript
+const hasPermission = await Orpheus.checkOverlayPermission()
+```
+
+### requestOverlayPermission()
+
+```typescript
+requestOverlayPermission(): Promise<void>
+```
+
+Opens system settings to request overlay permission.
+
+```typescript
+await Orpheus.requestOverlayPermission()
+```
+
+### showDesktopLyrics()
+
+```typescript
+showDesktopLyrics(): Promise<void>
+```
+
+Shows the desktop lyrics floating window.
+
+```typescript
+await Orpheus.showDesktopLyrics()
+```
+
+### hideDesktopLyrics()
+
+```typescript
+hideDesktopLyrics(): Promise<void>
+```
+
+Hides the desktop lyrics floating window.
+
+```typescript
+await Orpheus.hideDesktopLyrics()
+```
+
+### setDesktopLyrics()
+
+```typescript
+setDesktopLyrics(lyricsJson: string): Promise<void>
+```
+
+Sets the lyrics content for desktop display.
+
+<ParamField path="lyricsJson" type="string" required>
+  JSON string containing lyrics data with timestamps
+</ParamField>
+
+```typescript
+const lyrics = {
+  lines: [
+    { time: 0, text: 'Line 1' },
+    { time: 5000, text: 'Line 2' }
+  ]
+}
+await Orpheus.setDesktopLyrics(JSON.stringify(lyrics))
+```
+
+## Advanced Methods
+
+### setPlaybackSpeed()
+
+```typescript
+setPlaybackSpeed(speed: number): Promise<void>
+```
+
+Sets playback speed multiplier.
+
+<ParamField path="speed" type="number" required>
+  Speed multiplier (typically 0.5 to 2.0)
+</ParamField>
+
+```typescript
+await Orpheus.setPlaybackSpeed(1.25)
+```
+
+### getPlaybackSpeed()
+
+```typescript
+getPlaybackSpeed(): Promise<number>
+```
+
+Returns current playback speed.
+
+```typescript
+const speed = await Orpheus.getPlaybackSpeed()
+```
+
+### setSleepTimer()
+
+```typescript
+setSleepTimer(durationMs: number): Promise<void>
+```
+
+Sets a sleep timer to pause playback after a duration.
+
+<ParamField path="durationMs" type="number" required>
+  Duration in milliseconds
+</ParamField>
+
+```typescript
+await Orpheus.setSleepTimer(30 * 60 * 1000) // 30 minutes
+```
+
+### getSleepTimerEndTime()
+
+```typescript
+getSleepTimerEndTime(): Promise<number | null>
+```
+
+Returns the sleep timer end timestamp, or `null` if not set.
+
+```typescript
+const endTime = await Orpheus.getSleepTimerEndTime()
+if (endTime) {
+  console.log('Timer ends at:', new Date(endTime))
+}
+```
+
+### cancelSleepTimer()
+
+```typescript
+cancelSleepTimer(): Promise<void>
+```
+
+Cancels the active sleep timer.
+
+```typescript
+await Orpheus.cancelSleepTimer()
+```
+
+### updateSpectrumData()
+
+```typescript
+updateSpectrumData(destination: Float32Array): void
+```
+
+Synchronously updates a Float32Array with current FFT spectrum data (Android only).
+
+<ParamField path="destination" type="Float32Array" required>
+  Pre-allocated Float32Array of length `SPECTRUM_SIZE` (512)
+</ParamField>
+
+```typescript
+import { SPECTRUM_SIZE } from '@bbplayer/orpheus'
+
+const spectrum = new Float32Array(SPECTRUM_SIZE)
+
+function animate() {
+  Orpheus.updateSpectrumData(spectrum)
+  // Use spectrum data for visualization
+  requestAnimationFrame(animate)
+}
+```
+
+### debugTriggerError()
+
+```typescript
+debugTriggerError(): Promise<void>
+```
+
+Triggers a test error for debugging error handling.
+
+```typescript
+await Orpheus.debugTriggerError()
+```
+
+## React Hooks
+
+### useOrpheus()
+
+```typescript
+function useOrpheus(): {
+  state: PlaybackState
+  isPlaying: boolean
+  position: number
+  duration: number
+  buffered: number
+  currentTrack: Track | null
+  currentIndex: number
+}
+```
+
+All-in-one hook combining playback state, progress, and current track.
+
+```typescript
+import { useOrpheus } from '@bbplayer/orpheus'
+
+function Player() {
+  const { state, isPlaying, position, duration, currentTrack } = useOrpheus()
+  
+  return (
+    <View>
+      <Text>{currentTrack?.title}</Text>
+      <Text>{position} / {duration}</Text>
+    </View>
+  )
+}
+```
+
+### useProgress()
+
+```typescript
+function useProgress(): {
+  position: number
+  duration: number
+  buffered: number
+}
+```
+
+Hook for tracking playback progress.
+
+```typescript
+import { useProgress } from '@bbplayer/orpheus'
+
+function ProgressBar() {
+  const { position, duration, buffered } = useProgress()
+  return <Slider value={position} max={duration} />
+}
+```
+
+### usePlaybackState()
+
+```typescript
+function usePlaybackState(): PlaybackState
+```
+
+Hook for tracking playback state changes.
+
+```typescript
+import { usePlaybackState, PlaybackState } from '@bbplayer/orpheus'
+
+function LoadingIndicator() {
+  const state = usePlaybackState()
+  return state === PlaybackState.BUFFERING ? <Spinner /> : null
+}
+```
+
+### useIsPlaying()
+
+```typescript
+function useIsPlaying(): boolean
+```
+
+Hook for tracking play/pause state.
+
+```typescript
+import { useIsPlaying } from '@bbplayer/orpheus'
+
+function PlayButton() {
+  const isPlaying = useIsPlaying()
+  return <Icon name={isPlaying ? 'pause' : 'play'} />
+}
+```
+
+### useCurrentTrack()
+
+```typescript
+function useCurrentTrack(): {
+  track: Track | null
+  index: number
+}
+```
+
+Hook for tracking the current track and queue index.
+
+```typescript
+import { useCurrentTrack } from '@bbplayer/orpheus'
+
+function NowPlaying() {
+  const { track, index } = useCurrentTrack()
+  return (
+    <View>
+      <Text>{track?.title}</Text>
+      <Text>Track {index + 1}</Text>
+    </View>
+  )
+}
+```
+
+## Headless Task
+
+### registerOrpheusHeadlessTask()
+
+```typescript
+function registerOrpheusHeadlessTask(
+  task: (event: OrpheusHeadlessEvent) => Promise<void>
+): void
+```
+
+Registers a background task handler for playback events.
+
+<ParamField path="task" type="function" required>
+  Async function that handles headless events
+</ParamField>
+
+```typescript
+import { registerOrpheusHeadlessTask } from '@bbplayer/orpheus'
+
+registerOrpheusHeadlessTask(async (event) => {
+  switch (event.eventName) {
+    case 'onTrackStarted':
+      // Handle track start
+      break
+    case 'onTrackFinished':
+      // Handle track finish
+      break
+    case 'onTrackPaused':
+      // Handle pause
+      break
+    case 'onTrackResumed':
+      // Handle resume
+      break
+  }
+})
+```
+
+## Events
+
+Orpheus uses an event emitter pattern for real-time notifications.
+
+### Event Listener Pattern
+
+```typescript
+const subscription = Orpheus.addListener('eventName', (event) => {
+  // Handle event
+})
+
+// Later: remove listener
+subscription.remove()
+```
+
+### onPlaybackStateChanged
+
+```typescript
+Orpheus.addListener('onPlaybackStateChanged', (event: { state: PlaybackState }) => {
+  console.log('State:', event.state)
+})
+```
+
+Fired when playback state changes (IDLE, BUFFERING, READY, ENDED).
+
+### onTrackStarted
+
+```typescript
+Orpheus.addListener('onTrackStarted', (event: { 
+  trackId: string
+  reason: number 
+}) => {
+  console.log('Started:', event.trackId, 'Reason:', event.reason)
+})
+```
+
+Fired when a track starts playing.
+
+### onTrackFinished
+
+```typescript
+Orpheus.addListener('onTrackFinished', (event: {
+  trackId: string
+  finalPosition: number
+  duration: number
+}) => {
+  console.log(`Finished ${event.trackId} at ${event.finalPosition}s`)
+})
+```
+
+Fired when a track finishes playing.
+
+### onPositionUpdate
+
+```typescript
+Orpheus.addListener('onPositionUpdate', (event: {
+  position: number
+  duration: number
+  buffered: number
+}) => {
+  console.log(`${event.position}s / ${event.duration}s`)
+})
+```
+
+Fired periodically with playback progress (typically every second).
+
+### onIsPlayingChanged
+
+```typescript
+Orpheus.addListener('onIsPlayingChanged', (event: { status: boolean }) => {
+  console.log('Playing:', event.status)
+})
+```
+
+Fired when play/pause state changes.
+
+### onPlayerError
+
+```typescript
+Orpheus.addListener('onPlayerError', (event: PlaybackErrorEvent) => {
+  if (event.platform === 'android') {
+    console.error('Android error:', event.errorCodeName, event.message)
+    console.error('Stack:', event.stackTrace)
+  } else {
+    console.error('iOS error:', event.error)
+  }
+})
+```
+
+Fired when a playback error occurs. Event structure differs by platform.
+
+### onDownloadUpdated
+
+```typescript
+Orpheus.addListener('onDownloadUpdated', (event: DownloadTask) => {
+  console.log(`Download ${event.id}: ${event.percentDownloaded}%`)
+  console.log('State:', event.state)
+})
+```
+
+Fired when download progress or state changes.
+
+### onCoverDownloadProgress
+
+```typescript
+Orpheus.addListener('onCoverDownloadProgress', (event: {
+  current: number
+  total: number
+  trackId: string
+  status: 'success' | 'failed'
+}) => {
+  console.log(`Cover ${event.current}/${event.total}: ${event.status}`)
+})
+```
+
+Fired during batch cover art download operations.
+
+### onPlaybackSpeedChanged
+
+```typescript
+Orpheus.addListener('onPlaybackSpeedChanged', (event: { speed: number }) => {
+  console.log('Speed:', event.speed)
+})
+```
+
+Fired when playback speed changes.
+
+### onExportProgress
+
+```typescript
+Orpheus.addListener('onExportProgress', (event: {
+  progress?: number
+  currentId: string
+  index?: number
+  total?: number
+  status: 'success' | 'error'
+  message?: string
+}) => {
+  console.log(`Exporting [${event.index}/${event.total}]: ${event.currentId}`)
+  if (event.progress !== undefined) {
+    console.log(`Progress: ${event.progress}%`)
+  }
+})
+```
+
+Fired during batch export operations.
+
+### onHeadlessEvent
+
+```typescript
+Orpheus.addListener('onHeadlessEvent', (event: OrpheusHeadlessEvent) => {
+  console.log('Headless event:', event.eventName)
+})
+```
+
+Fired for headless task events (iOS only - Android uses native headless service).
+
+## Types and Interfaces
+
+### Track
+
+```typescript
+interface Track {
+  id: string
+  url: string
+  title?: string
+  artist?: string
+  artwork?: string
+  duration?: number
+}
+```
+
+### DownloadTask
+
+```typescript
+interface DownloadTask {
+  id: string
+  state: DownloadState
+  percentDownloaded: number
+  bytesDownloaded: number
+  contentLength: number
+  track?: Track
+}
+```
+
+### PlaybackErrorEvent
+
+```typescript
+type PlaybackErrorEvent = AndroidPlaybackErrorEvent | IosPlaybackErrorEvent
+
+interface AndroidPlaybackErrorEvent {
+  platform: 'android'
+  errorCode: number
+  errorCodeName: string | null
+  timestamp: string
+  message: string | null
+  stackTrace: string
+  rootCauseClass: string
+  rootCauseMessage: string
+}
+
+interface IosPlaybackErrorEvent {
+  platform: 'ios'
+  error: string
+}
+```
+
+### OrpheusHeadlessEvent
+
+```typescript
+type OrpheusHeadlessEvent =
+  | OrpheusHeadlessTrackStartedEvent
+  | OrpheusHeadlessTrackFinishedEvent
+  | OrpheusHeadlessTrackPausedEvent
+  | OrpheusHeadlessTrackResumedEvent
+
+interface OrpheusHeadlessTrackStartedEvent {
+  eventName: 'onTrackStarted'
+  trackId: string
+  reason: number
+}
+
+interface OrpheusHeadlessTrackFinishedEvent {
+  eventName: 'onTrackFinished'
+  trackId: string
+  finalPosition: number
+  duration: number
+}
+
+interface OrpheusHeadlessTrackPausedEvent {
+  eventName: 'onTrackPaused'
+}
+
+interface OrpheusHeadlessTrackResumedEvent {
+  eventName: 'onTrackResumed'
+}
+```
+
+## Enums
+
+### PlaybackState
+
+```typescript
+enum PlaybackState {
+  IDLE = 1,
+  BUFFERING = 2,
+  READY = 3,
+  ENDED = 4
+}
+```
+
+### RepeatMode
+
+```typescript
+enum RepeatMode {
+  OFF = 0,
+  TRACK = 1,
+  QUEUE = 2
+}
+```
+
+### TransitionReason
+
+```typescript
+enum TransitionReason {
+  REPEAT = 0,
+  AUTO = 1,
+  SEEK = 2,
+  PLAYLIST_CHANGED = 3
+}
+```
+
+### DownloadState
+
+```typescript
+enum DownloadState {
+  QUEUED = 0,
+  STOPPED = 1,
+  DOWNLOADING = 2,
+  COMPLETED = 3,
+  FAILED = 4,
+  REMOVING = 5,
+  RESTARTING = 7
+}
+```
+
+## Constants
+
+### SPECTRUM_SIZE
+
+```typescript
+export const SPECTRUM_SIZE = 512
+```
+
+The valid length for FFT spectrum data. Use this to initialize the Float32Array for `updateSpectrumData()`.
+
+```typescript
+import { SPECTRUM_SIZE } from '@bbplayer/orpheus'
+
+const spectrum = new Float32Array(SPECTRUM_SIZE)
+```

@@ -1,0 +1,391 @@
+---
+title: 'Features'
+description: 'Detailed features of @bbplayer/orpheus including Bilibili integration, dual caching, Media3, and desktop lyrics'
+---
+
+# Features
+
+Orpheus provides a comprehensive set of features optimized for mobile audio playback with specialized support for Bilibili content.
+
+## Bilibili Integration
+
+Seamless integration with Bilibili's audio streaming infrastructure.
+
+### Authentication
+
+Set the Bilibili cookie once to enable authenticated requests:
+
+```typescript
+import { Orpheus } from '@bbplayer/orpheus'
+
+Orpheus.setBilibiliCookie('SESSDATA=your_session_data; ...')
+```
+
+### Custom URL Scheme
+
+Use the `orpheus://bilibili` protocol to play Bilibili audio content:
+
+```typescript
+const track: Track = {
+  id: 'BV1xx411c7mD',
+  url: 'orpheus://bilibili?bvid=BV1xx411c7mD&cid=123456789',
+  title: 'Video Title',
+  artist: 'Uploader Name'
+}
+
+await Orpheus.addToEnd([track], track.id)
+```
+
+### High Bitrate Support
+
+The native layer automatically:
+- Resolves available audio qualities
+- Selects the highest bitrate stream
+- Handles authentication and token refresh
+- Manages stream expiration and re-fetching
+
+<Note>
+All Bilibili-specific logic is handled natively for optimal performance and reliability.
+</Note>
+
+## Dual Caching Mechanism
+
+Orpheus implements two independent caching systems:
+
+### 1. Download Cache
+
+Permanent storage for offline playback:
+
+```typescript
+// Download a track for offline use
+await Orpheus.downloadTrack(track)
+
+// Batch download multiple tracks
+await Orpheus.multiDownload(tracks)
+
+// Get all downloads
+const downloads = await Orpheus.getDownloads()
+
+// Check download status for specific IDs
+const statuses = await Orpheus.getDownloadStatusByIds(['id1', 'id2'])
+
+// Remove downloads
+await Orpheus.removeDownload('track-id')
+await Orpheus.removeDownloads(['id1', 'id2'])
+await Orpheus.removeAllDownloads()
+```
+
+**Download Events:**
+
+```typescript
+Orpheus.addListener('onDownloadUpdated', (event) => {
+  console.log('Download progress:', event.percentDownloaded)
+  console.log('State:', event.state) // QUEUED, DOWNLOADING, COMPLETED, etc.
+})
+```
+
+### 2. LRU Cache (Stream Cache)
+
+Temporary cache for streaming playback:
+
+- Automatically caches streams during playback
+- Least Recently Used (LRU) eviction policy
+- Optimized for "play-while-download" scenarios
+- Separate from download cache to avoid conflicts
+
+```typescript
+// Check which URIs are fully cached in LRU cache
+const cachedUris = Orpheus.getLruCachedUris([
+  'orpheus://bilibili?bvid=BV1xx411c7mD&cid=123456789',
+  'orpheus://bilibili?bvid=BV1yy422c8mE&cid=987654321'
+])
+```
+
+<Note>
+The dual caching system ensures downloaded content never interferes with streaming cache management.
+</Note>
+
+## Android Media3 (ExoPlayer)
+
+Built on Google's latest Media3 library for Android:
+
+- **Stability**: Production-ready with extensive testing
+- **Format Support**: Wide codec and container support (M4A, MP3, FLAC, etc.)
+- **Adaptive Streaming**: Intelligent buffering and quality adaptation
+- **Gapless Playback**: Seamless transitions between tracks (Android only)
+- **Background Playback**: Native MediaSession integration
+
+### Playback Control
+
+```typescript
+// Basic controls
+await Orpheus.play()
+await Orpheus.pause()
+await Orpheus.seekTo(120) // Seek to 2 minutes
+
+// Queue navigation
+await Orpheus.skipToNext()
+await Orpheus.skipToPrevious()
+await Orpheus.skipTo(5) // Jump to index 5
+
+// Queue management
+await Orpheus.addToEnd(tracks, startFromId, clearQueue)
+await Orpheus.playNext(track) // Insert as next track
+await Orpheus.removeTrack(index)
+await Orpheus.clear() // Clear entire queue
+
+// Get queue information
+const queue = await Orpheus.getQueue()
+const currentTrack = await Orpheus.getCurrentTrack()
+const currentIndex = await Orpheus.getCurrentIndex()
+const trackAtIndex = await Orpheus.getIndexTrack(3)
+```
+
+### Repeat and Shuffle
+
+```typescript
+import { RepeatMode } from '@bbplayer/orpheus'
+
+// Set repeat mode
+await Orpheus.setRepeatMode(RepeatMode.OFF)   // No repeat
+await Orpheus.setRepeatMode(RepeatMode.TRACK) // Repeat current track
+await Orpheus.setRepeatMode(RepeatMode.QUEUE) // Repeat entire queue
+
+// Get current repeat mode
+const mode = await Orpheus.getRepeatMode()
+
+// Toggle shuffle
+await Orpheus.setShuffleMode(true)
+const shuffleEnabled = await Orpheus.getShuffleMode()
+```
+
+## Desktop Lyrics (Android)
+
+System-level floating window for lyrics display.
+
+<Warning>
+Desktop lyrics are **Android-only** and cannot be implemented on iOS due to platform restrictions.
+</Warning>
+
+### Permission Handling
+
+```typescript
+// Check if overlay permission is granted
+const hasPermission = await Orpheus.checkOverlayPermission()
+
+if (!hasPermission) {
+  // Opens system settings for overlay permission
+  await Orpheus.requestOverlayPermission()
+}
+```
+
+### Display Control
+
+```typescript
+// Show desktop lyrics
+await Orpheus.showDesktopLyrics()
+
+// Hide desktop lyrics
+await Orpheus.hideDesktopLyrics()
+
+// Check visibility and lock state via properties
+console.log(Orpheus.isDesktopLyricsShown)
+console.log(Orpheus.isDesktopLyricsLocked)
+```
+
+### Set Lyrics Content
+
+```typescript
+const lyricsData = {
+  lines: [
+    { time: 0, text: 'First line' },
+    { time: 5000, text: 'Second line' },
+    { time: 10000, text: 'Third line' }
+  ]
+}
+
+await Orpheus.setDesktopLyrics(JSON.stringify(lyricsData))
+```
+
+The desktop lyrics window:
+- Floats above all apps
+- Syncs automatically with playback position
+- Supports drag positioning
+- Can be locked to prevent accidental moves
+- Persists across app switches
+
+## Advanced Features
+
+### Playback Speed
+
+```typescript
+// Set playback speed (0.5x to 2.0x typical range)
+await Orpheus.setPlaybackSpeed(1.5)
+
+const currentSpeed = await Orpheus.getPlaybackSpeed()
+
+Orpheus.addListener('onPlaybackSpeedChanged', (event) => {
+  console.log('Speed changed to:', event.speed)
+})
+```
+
+### Sleep Timer
+
+```typescript
+// Set sleep timer (duration in milliseconds)
+await Orpheus.setSleepTimer(30 * 60 * 1000) // 30 minutes
+
+// Get end time
+const endTime = await Orpheus.getSleepTimerEndTime() // Returns timestamp or null
+
+// Cancel timer
+await Orpheus.cancelSleepTimer()
+```
+
+### Audio Spectrum (Android)
+
+Real-time FFT data for visualizations:
+
+```typescript
+import { Orpheus, SPECTRUM_SIZE } from '@bbplayer/orpheus'
+
+// Create Float32Array once and reuse
+const spectrumData = new Float32Array(SPECTRUM_SIZE)
+
+// In animation loop (e.g., 60fps)
+function animate() {
+  Orpheus.updateSpectrumData(spectrumData)
+  // spectrumData now contains 512 frequency magnitude values
+  // Use for visualization (bars, waveform, etc.)
+  
+  requestAnimationFrame(animate)
+}
+```
+
+<Note>
+`SPECTRUM_SIZE` is 512. The `updateSpectrumData()` method is synchronous for zero-copy performance.
+</Note>
+
+### Loudness Normalization (Android)
+
+ReplayGain-style volume normalization:
+
+```typescript
+// Enable/disable loudness normalization
+Orpheus.loudnessNormalizationEnabled = true
+
+console.log(Orpheus.loudnessNormalizationEnabled)
+```
+
+### Playback Position Restoration
+
+```typescript
+// Remember playback position on app restart
+Orpheus.restorePlaybackPositionEnabled = true
+```
+
+### Auto-play on Start
+
+```typescript
+// Automatically resume playback when app starts
+Orpheus.autoplayOnStartEnabled = true
+```
+
+## Export and Backup (Android)
+
+### Cover Art Download
+
+```typescript
+// Download missing cover art for downloaded tracks
+const count = await Orpheus.downloadMissingCovers()
+console.log(`Downloading ${count} covers`)
+
+Orpheus.addListener('onCoverDownloadProgress', (event) => {
+  console.log(`${event.current}/${event.total}: ${event.status}`)
+  console.log('Track ID:', event.trackId)
+})
+
+// Get local cover URI
+const coverUri = Orpheus.getDownloadedCoverUri('track-id')
+if (coverUri) {
+  console.log('Cover at:', coverUri) // file:// URI
+}
+```
+
+### Batch Export
+
+Export downloaded tracks with metadata embedding:
+
+```typescript
+// Select destination directory
+const destinationUri = await Orpheus.selectDirectory()
+if (!destinationUri) return // User cancelled
+
+// Export with custom filename pattern and options
+await Orpheus.exportDownloads(
+  ['track-id-1', 'track-id-2'],
+  destinationUri,
+  '{artist} - {name}',  // Filename pattern
+  true,                  // Embed lyrics
+  false,                 // Don't convert SPL to LRC
+  false                  // Don't crop cover art
+)
+
+Orpheus.addListener('onExportProgress', (event) => {
+  if (event.progress !== undefined) {
+    console.log(`Progress: ${event.progress}%`)
+  }
+  console.log(`[${event.index}/${event.total}] ${event.currentId}`)
+  console.log('Status:', event.status)
+})
+```
+
+**Filename Pattern Variables:**
+- `{id}` - Track unique ID
+- `{name}` - Track title
+- `{artist}` - Artist name
+- `{bvid}` - Bilibili BV ID (empty for non-Bilibili tracks)
+- `{cid}` - Bilibili CID (empty for non-Bilibili tracks)
+
+**Export Options:**
+- **embedLyrics**: Embeds cached lyrics into M4A metadata (only if lyrics were loaded in-app)
+- **convertToLrc**: Converts SPL (word-level timestamps) to standard LRC format for compatibility
+- **cropCoverArt**: Crops cover art to square aspect ratio (uses shorter dimension)
+
+<Warning>
+Export functionality uses Android SAF (Storage Access Framework) and requires a directory URI from `selectDirectory()`.
+</Warning>
+
+## Headless Task Support
+
+Run background tasks in response to playback events:
+
+```typescript
+import { registerOrpheusHeadlessTask } from '@bbplayer/orpheus'
+
+registerOrpheusHeadlessTask(async (event) => {
+  switch (event.eventName) {
+    case 'onTrackStarted':
+      console.log('Track started:', event.trackId, 'Reason:', event.reason)
+      // Update analytics, last.fm scrobble, etc.
+      break
+      
+    case 'onTrackFinished':
+      console.log('Track finished:', event.trackId)
+      console.log(`Played ${event.finalPosition}s of ${event.duration}s`)
+      break
+      
+    case 'onTrackPaused':
+      console.log('Playback paused')
+      break
+      
+    case 'onTrackResumed':
+      console.log('Playback resumed')
+      break
+  }
+})
+```
+
+<Note>
+On Android, headless tasks run via Android Headless Task Service. On iOS, events are bridged through the native module listener system.
+</Note>

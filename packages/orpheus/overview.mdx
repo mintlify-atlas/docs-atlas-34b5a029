@@ -1,0 +1,160 @@
+---
+title: '@bbplayer/orpheus'
+description: 'High-performance core audio playback module for BBPlayer'
+---
+
+# @bbplayer/orpheus
+
+BBPlayer's high-performance core audio playback module - a custom-built audio library designed to replace third-party solutions with tighter integration with Android Media3 (ExoPlayer) and AVFoundation, providing native-level support for Bilibili audio streaming.
+
+## Overview
+
+`@bbplayer/orpheus` is an Expo native module built specifically for the BBPlayer project. It provides a complete audio playback solution with specialized features for handling Bilibili's audio streaming protocol and advanced caching mechanisms.
+
+<Note>
+This library is primarily intended for internal use by BBPlayer. While the code is open source, development is focused on meeting BBPlayer's feature requirements.
+</Note>
+
+## Installation
+
+```bash
+npm install @bbplayer/orpheus
+```
+
+```bash
+yarn add @bbplayer/orpheus
+```
+
+```bash
+pnpm add @bbplayer/orpheus
+```
+
+## Quick Start
+
+```typescript
+import { Orpheus, PlaybackState, type Track } from '@bbplayer/orpheus'
+
+// Set Bilibili authentication cookie
+Orpheus.setBilibiliCookie('your-cookie-here')
+
+// Create a track
+const track: Track = {
+  id: 'unique-track-id',
+  url: 'orpheus://bilibili?bvid=BV1xx411c7mD&cid=123456789',
+  title: 'Song Title',
+  artist: 'Artist Name',
+  artwork: 'https://example.com/artwork.jpg',
+  duration: 240
+}
+
+// Add tracks to queue and start playback
+await Orpheus.addToEnd([track], track.id)
+await Orpheus.play()
+
+// Listen to playback events
+Orpheus.addListener('onPlaybackStateChanged', (event) => {
+  console.log('Playback state:', event.state)
+})
+
+Orpheus.addListener('onPositionUpdate', (event) => {
+  console.log(`Position: ${event.position}s / ${event.duration}s`)
+})
+```
+
+## Using React Hooks
+
+Orpheus provides convenient React hooks for managing playback state:
+
+```typescript
+import { useOrpheus, useProgress, useCurrentTrack } from '@bbplayer/orpheus'
+
+function PlayerComponent() {
+  // Get all playback information at once
+  const { state, isPlaying, position, duration, currentTrack } = useOrpheus()
+  
+  // Or use individual hooks
+  const progress = useProgress()
+  const { track, index } = useCurrentTrack()
+  
+  return (
+    <View>
+      <Text>{currentTrack?.title}</Text>
+      <Text>{position} / {duration}</Text>
+    </View>
+  )
+}
+```
+
+## Platform Support
+
+### Android
+- Full feature support
+- Built on Media3 (ExoPlayer)
+- All advanced features available
+
+### iOS
+- Basic iOS adaptation provided
+- Built on AVFoundation
+- Some Android-specific features unavailable:
+  - Desktop lyrics (not possible on iOS)
+  - Audio spectrum visualization
+  - Gapless playback
+  - Loudness normalization
+  - Cover art download for offline playback
+  - Batch export of downloaded tracks
+
+<Warning>
+iOS support is provided as "basic adaptation" - the BBPlayer team currently has no plans for active iOS development.
+</Warning>
+
+## Key Concepts
+
+### Track Object
+
+The `Track` interface is the core data structure for audio content:
+
+```typescript
+interface Track {
+  id: string          // Unique identifier
+  url: string         // Playback URL (supports orpheus:// protocol)
+  title?: string      // Track title
+  artist?: string     // Artist name
+  artwork?: string    // Artwork URL
+  duration?: number   // Duration in seconds
+}
+```
+
+### Bilibili URL Protocol
+
+Orpheus supports a custom URL scheme for Bilibili audio:
+
+```
+orpheus://bilibili?bvid=BV1xx411c7mD&cid=123456789
+```
+
+The native module automatically handles:
+- High bitrate audio resolution
+- Authentication via cookie
+- Stream extraction and caching
+
+### Playback States
+
+```typescript
+enum PlaybackState {
+  IDLE = 1,       // No media loaded
+  BUFFERING = 2,  // Loading/buffering content
+  READY = 3,      // Ready to play
+  ENDED = 4       // Playback completed
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Features" icon="sparkles" href="./features">
+    Explore Bilibili integration, caching, and desktop lyrics
+  </Card>
+  <Card title="API Reference" icon="code" href="./api">
+    Complete API documentation with all methods and types
+  </Card>
+</CardGroup>

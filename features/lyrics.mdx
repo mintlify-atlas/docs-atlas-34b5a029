@@ -1,0 +1,440 @@
+---
+title: 'Lyrics System'
+description: 'Advanced lyrics support with SPL format, word-by-word synchronization, and multi-language translations'
+---
+
+BBPlayer features a sophisticated lyrics system supporting the **SPL (Salt Player Lyrics)** format, enabling word-level synchronization and translation display.
+
+## SPL Lyrics Format
+
+SPL is an enhanced LRC format that supports word-by-word timing and multiple translation lines.
+
+### Format Structure
+
+SPL files follow the standard LRC timestamp format with additional features:
+
+```spl
+[ar:Artist Name]
+[ti:Song Title]
+[al:Album Name]
+
+[00:12.34]This is a <00:12.89>line <00:13.45>with <00:13.92>word-by-word <00:14.78>timing
+[00:12.34]这是一行带有逐字时间轴的歌词
+[00:12.34]This is a translation line
+
+[00:18.56]Another line without word timing
+```
+
+### Key Features
+
+<Accordion title="Word-Level Synchronization">
+  SPL supports inline timing tags using angle brackets `<00:12.89>` to mark the start time of each word.
+  
+  ```typescript
+  // Word span parsing (packages/splash/src/parser/spans.ts)
+  // Detects inline timestamps like <00:12.89> to create word-level spans
+  const spans = parseSpans(content, startTime, lineNumber)
+  ```
+  
+  <Info>
+  Word-level timing creates a more engaging karaoke-style experience with smooth progress highlighting.
+  </Info>
+</Accordion>
+
+<Accordion title="Multiple Translations">
+  Lines with identical timestamps are grouped together - the first is the original lyric, subsequent lines are translations.
+  
+  ```spl
+  [00:12.34]Original lyric line
+  [00:12.34]First translation (e.g., Chinese)
+  [00:12.34]Second translation (e.g., English)
+  ```
+</Accordion>
+
+<Accordion title="Metadata Tags">
+  Standard LRC metadata tags are supported:
+  - `[ar:]` - Artist
+  - `[ti:]` - Title
+  - `[al:]` - Album
+  - `[by:]` - Creator
+  - `[offset:]` - Timing offset in milliseconds
+</Accordion>
+
+## Lyrics Sources
+
+BBPlayer automatically fetches lyrics from multiple providers and selects the best match.
+
+### Automatic Matching
+
+The lyrics service searches three platforms simultaneously:
+
+<Steps>
+  <Step title="Multi-Source Search">
+    Lyrics are requested from:
+    - **NetEase Cloud Music** (网易云音乐)
+    - **QQ Music** (QQ音乐)
+    - **Kugou Music** (酷狗音乐)
+    
+    ```typescript
+    // Parallel search (apps/mobile/src/lib/services/lyricService.ts:103-141)
+    const providers = [
+      neteaseApi.searchBestMatchedLyrics(keyword, durationMs, signal),
+      qqMusicApi.searchBestMatchedLyrics(keyword, durationMs, signal),
+      kugouApi.searchBestMatchedLyrics(keyword, durationMs, signal)
+    ]
+    
+    // Returns first successful result
+    return ResultAsync.fromPromise(Promise.any(providers), ...)
+    ```
+  </Step>
+  
+  <Step title="Best Match Selection">
+    Each provider searches for songs matching:
+    - Song title (cleaned and normalized)
+    - Duration (within tolerance)
+    - Artist name (if available)
+    
+    The first provider to return a high-confidence match wins.
+  </Step>
+  
+  <Step title="Race Condition Handling">
+    When one provider succeeds, all other pending requests are automatically cancelled via `AbortController`.
+  </Step>
+</Steps>
+
+### Smart Keyword Cleaning
+
+Before searching, the service cleans track titles to improve match accuracy:
+
+```typescript
+// Keyword extraction (apps/mobile/src/lib/services/lyricService.ts:38-55)
+private cleanKeyword(keyword: string): string {
+  // Priority: Extract content in 《》 or 「」
+  const priorityRegex = /《(.+?)》|「(.+?)」/
+  const priorityMatch = priorityRegex.exec(keyword)
+  
+  if (priorityMatch) {
+    return priorityMatch[1] || priorityMatch[2]
+  }
+  
+  // Remove brackets and quotes
+  return keyword.replace(/【.*?】|".*?"/g, '').trim()
+}
+```
+
+### Bilibili-Specific Enhancement
+
+For tracks from Bilibili videos, BBPlayer can extract the actual song name from video metadata:
+
+<Info>
+Bilibili's `bgm_info` field in video details often contains the real song name, improving lyric search accuracy significantly.
+</Info>
+
+```typescript
+// Bilibili music name extraction (apps/mobile/src/lib/services/lyricService.ts:425-448)
+const result = await bilibiliApi.getWebPlayerInfo(bvid, cid)
+if (result.isOk() && result.value.bgm_info) {
+  // Extract song name from 《...》 pattern
+  const filtered = /《(.+?)》/.exec(result.value.bgm_info.music_title)
+  return filtered?.[1] ?? result.value.bgm_info.music_title
+}
+```
+
+## Lyrics Display
+
+The lyrics viewer provides an immersive, full-screen experience.
+
+### Player Integration
+
+Swipe left on the player to access the lyrics view:
+
+<Tabs>
+  <Tab title="Scrolling Lyrics">
+    - Auto-scrolls to keep current line centered
+    - Smooth animations between lines
+    - Large, readable font
+    - High contrast colors
+  </Tab>
+  
+  <Tab title="Translation Display">
+    - Original lyrics in primary font
+    - Translations below in secondary font
+    - Color-coded for distinction
+    - Configurable in Settings > Lyrics
+  </Tab>
+  
+  <Tab title="Interactive Seeking">
+    - Tap any lyric line to seek to that timestamp
+    - Drag to scroll through lyrics manually
+    - Auto-scroll re-engages when playback continues
+  </Tab>
+</Tabs>
+
+### Word-by-Word Progress
+
+When lyrics include word-level timing:
+
+- **Progressive highlight**: Each word lights up as it's sung
+- **Smooth transitions**: Animated color changes between words
+- **Karaoke effect**: Visual feedback matches audio precisely
+
+```typescript
+// Word progress rendering
+// The lyrics component tracks playback position and highlights
+// words based on their start/end times from SPL spans
+```
+
+## Lyrics Caching
+
+BBPlayer caches all fetched lyrics locally for offline access.
+
+### Cache Strategy
+
+<Steps>
+  <Step title="Check Local Cache">
+    First, check if lyrics exist at:
+    ```
+    {DocumentDirectory}/lyrics/{trackUniqueKey}.json
+    ```
+  </Step>
+  
+  <Step title="Fetch from Network">
+    If not cached, fetch from providers (described above).
+  </Step>
+  
+  <Step title="Save to Cache">
+    Store the lyrics file with metadata:
+    ```json
+    {
+      "id": "bilibili::BV1xx411c7XD",
+      "lrc": "[00:00.00]Lyric content...",
+      "tlyric": "[00:00.00]Translation...",
+      "updateTime": 1640000000000,
+      "misc": {
+        "userOffset": 0
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+### Cache Management
+
+<Warning>
+Clearing lyrics cache will require re-downloading all lyrics on next playback. This requires an internet connection.
+</Warning>
+
+Cache operations available in Settings > Lyrics:
+
+- **Clear Cache**: Delete all cached lyrics
+- **View Cache Size**: Display total storage used
+- **Export Lyrics**: Save lyrics files to device storage
+
+## Manual Lyrics Management
+
+### Search and Select
+
+If auto-match fails or selects wrong lyrics:
+
+<Steps>
+  <Step title="Open Lyrics Search">
+    From the player functional menu, select **"搜索歌词"** (Search Lyrics).
+  </Step>
+  
+  <Step title="Enter Keywords">
+    Type song title or artist name. Results from all three providers are displayed.
+  </Step>
+  
+  <Step title="Select Match">
+    Tap the correct result. BBPlayer will:
+    - Fetch the full lyrics
+    - Parse and cache them
+    - Immediately display in player
+  </Step>
+</Steps>
+
+### Adjust Timing Offset
+
+If lyrics are slightly out of sync:
+
+1. Open player functional menu
+2. Select **"歌词偏移"** (Lyric Offset)
+3. Use +/- buttons to adjust offset in milliseconds
+4. Changes are saved per-track
+
+```typescript
+// User offset storage (apps/mobile/src/lib/services/lyricService.ts:400-409)
+const newLyricData: LyricFileData = {
+  id: uniqueKey,
+  lrc: newLrc,
+  tlyric: newTlyric,
+  misc: {
+    userOffset: oldOffset  // Preserved during migrations
+  }
+}
+```
+
+## Lyrics Settings
+
+Customize lyrics appearance and behavior in **Settings > Lyrics**:
+
+### Source Priority
+
+<Tabs>
+  <Tab title="Auto (Default)">
+    Search all providers simultaneously, use first match.
+  </Tab>
+  
+  <Tab title="NetEase Only">
+    Use only NetEase Cloud Music lyrics.
+  </Tab>
+  
+  <Tab title="QQ Music Only">
+    Use only QQ Music lyrics.
+  </Tab>
+  
+  <Tab title="Kugou Only">
+    Use only Kugou Music lyrics.
+  </Tab>
+</Tabs>
+
+<Note>
+Single-source mode may result in fewer successful matches but can be faster if you know which provider has better lyrics for your music library.
+</Note>
+
+### Desktop Lyrics
+
+Display lyrics on lock screen and in notification:
+
+- **Always On**: Show lyrics in notification area
+- **Lock Screen**: Display current lyric line on lock screen
+- **Font Size**: Adjust lyric text size
+- **Show Translation**: Toggle translation display
+
+### Styling Options
+
+- **Font Family**: Choose between system fonts
+- **Text Alignment**: Left, center, or right
+- **Highlight Color**: Customize current line color
+- **Translation Color**: Set secondary text color
+- **Background Opacity**: Adjust lyrics background transparency
+
+## Lyrics Format Migration
+
+BBPlayer automatically migrates lyrics from older storage formats.
+
+### Legacy Format Support
+
+<Accordion title="Old Raw Format">
+  Previous versions stored lyrics as:
+  ```json
+  {
+    "raw": "[00:00.00]Lyrics\n\n[00:00.00]Translation",
+    "offset": 0
+  }
+  ```
+  
+  This is automatically converted to the new format:
+  ```json
+  {
+    "lrc": "[00:00.00]Lyrics",
+    "tlyric": "[00:00.00]Translation",
+    "misc": { "userOffset": 0 }
+  }
+  ```
+</Accordion>
+
+<Accordion title="Migration Process">
+  On app startup, if the `.migration_v2_done` marker doesn't exist:
+  
+  1. Scan all files in `lyrics/` directory
+  2. Parse each JSON file
+  3. Detect format version
+  4. Convert to new format if needed
+  5. Create marker file to skip future migrations
+  
+  ```typescript
+  // Migration check (apps/mobile/src/lib/services/lyricService.ts:336-423)
+  const migrationMarker = new FileSystem.File(lyricsDir, '.migration_v2_done')
+  if (migrationMarker.exists) return  // Already migrated
+  ```
+</Accordion>
+
+## SPL Parser Library
+
+The SPL parsing is handled by the `@bbplayer/splash` package:
+
+```
+packages/splash/
+├── src/
+│   ├── parser/
+│   │   ├── index.ts      # Main parser
+│   │   └── spans.ts      # Word span parser
+│   ├── converter/
+│   │   └── netease.ts    # NetEase format converter
+│   └── types.ts          # Type definitions
+```
+
+### Parsing API
+
+```typescript
+import { parseSpl, verify } from '@bbplayer/splash'
+
+// Parse SPL content
+const lyricData = parseSpl(splContent)
+// Returns: { meta: {...}, lines: [...]}
+
+// Validate format
+const result = verify(splContent)
+if (!result.isValid) {
+  console.error('Invalid SPL:', result.error)
+}
+```
+
+### NetEase Format Conversion
+
+BBPlayer can convert NetEase's JSON lyrics to SPL:
+
+```typescript
+import { convertNeteaseToSpl } from '@bbplayer/splash/converter/netease'
+
+const neteaseJson = {
+  lrc: { lyric: "[00:00.00]Lyrics..." },
+  tlyric: { lyric: "[00:00.00]Translation..." }
+}
+
+const splContent = convertNeteaseToSpl(neteaseJson)
+```
+
+## Troubleshooting
+
+### Lyrics Not Found
+
+- Try manual search with different keywords
+- Check if track title contains special characters
+- Verify internet connection
+- Try switching lyric source in settings
+
+### Lyrics Out of Sync
+
+- Use lyrics offset adjustment in player menu
+- Common offset values: -500ms to +500ms
+- Check if audio file is the correct version
+
+### Word-by-Word Not Working
+
+- Verify lyrics file contains inline timestamps
+- Some lyrics may only have line-level timing
+- Check if dynamic lyrics are enabled in settings
+
+### Translations Not Showing
+
+- Enable translation display in Settings > Lyrics
+- Not all lyrics have translations available
+- Try different lyric sources
+
+### Cache Takes Too Much Space
+
+- Clear lyrics cache in Settings > Lyrics
+- Lyrics are re-downloaded on demand
+- Each lyric file is typically 2-10 KB

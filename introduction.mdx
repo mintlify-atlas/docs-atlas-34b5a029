@@ -1,0 +1,171 @@
+---
+title: BBPlayer - Local-First Bilibili Audio Player
+description: A lightweight, open-source audio player for Bilibili built with React Native. Stream and download your favorite Bilibili audio content with an elegant, distraction-free experience.
+---
+
+<img
+  src="/images/hero.png"
+  alt="BBPlayer Hero"
+  className="block dark:hidden"
+/>
+<img
+  src="/images/hero-dark.png"
+  alt="BBPlayer Hero"
+  className="hidden dark:block"
+/>
+
+# Welcome to BBPlayer
+
+BBPlayer is a **local-first Bilibili audio player** built with React Native. Say goodbye to the bloated official Bilibili app and enjoy a lightweight, smooth listening experience focused on what matters — your music.
+
+<Note>
+  BBPlayer prioritizes offline playback, giving you complete control over your audio library. Download your favorite tracks and enjoy them anywhere, anytime.
+</Note>
+
+## Why BBPlayer?
+
+The official Bilibili app is feature-packed but often feels heavy and sluggish when you just want to listen to music. BBPlayer strips away the noise and delivers a pure audio experience with:
+
+- **🎵 Pure Audio Focus**: No distractions, just music
+- **⚡ Lightning Fast**: Built with performance in mind
+- **📱 Native Experience**: Smooth Material Design 3 interface with Monet color theming
+- **🔒 Local-First**: Your library, your control
+- **🌐 Open Source**: MIT licensed and community-driven
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Bilibili Integration" icon="bilibili" iconType="duotone">
+    Login with QR code or cookies to access your favorites, subscriptions, and collections directly from Bilibili.
+  </Card>
+  
+  <Card title="Advanced Lyrics System" icon="music" iconType="duotone">
+    Auto-fetch lyrics from NetEase, QQ Music, and Kugou. Supports SPL format with word-by-word progress, romanization, and translations.
+  </Card>
+  
+  <Card title="Smart Playback" icon="play" iconType="duotone">
+    Full-featured player with queue management, loudness equalization, resume playback, auto-play on startup, and video comments display.
+  </Card>
+  
+  <Card title="Download & Export" icon="download" iconType="duotone">
+    Cache songs for offline playback and export them as .m4a files with embedded lyrics, cover art, and metadata.
+  </Card>
+  
+  <Card title="Playlist Import" icon="list" iconType="duotone">
+    Import playlists from NetEase Cloud Music and QQ Music — automatically matches tracks to Bilibili videos.
+  </Card>
+  
+  <Card title="Material Design 3" icon="palette" iconType="duotone">
+    Beautiful UI with light/dark modes, Monet color extraction from album art, and smooth animations.
+  </Card>
+</CardGroup>
+
+## Screenshots
+
+<CardGroup cols={3}>
+  <Card>
+    <img src="/images/screenshots/home.jpg" alt="Home Screen" />
+    <div className="text-center mt-2 text-sm">Home Screen</div>
+  </Card>
+  <Card>
+    <img src="/images/screenshots/player.jpg" alt="Player Interface" />
+    <div className="text-center mt-2 text-sm">Player Interface</div>
+  </Card>
+  <Card>
+    <img src="/images/screenshots/playlist.jpg" alt="Playlist View" />
+    <div className="text-center mt-2 text-sm">Playlist View</div>
+  </Card>
+  <Card>
+    <img src="/images/screenshots/library.jpg" alt="Library" />
+    <div className="text-center mt-2 text-sm">Music Library</div>
+  </Card>
+  <Card>
+    <img src="/images/screenshots/download.jpg" alt="Download Manager" />
+    <div className="text-center mt-2 text-sm">Download Manager</div>
+  </Card>
+</CardGroup>
+
+## Getting Started
+
+Ready to transform your Bilibili listening experience?
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start Guide"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Get up and running in 5 minutes
+  </Card>
+  <Card
+    title="Installation"
+    icon="mobile"
+    href="/installation"
+  >
+    Download and install BBPlayer on Android
+  </Card>
+  <Card
+    title="Core Features"
+    icon="stars"
+    href="/features/playback"
+  >
+    Explore all the powerful features
+  </Card>
+  <Card
+    title="GitHub Repository"
+    icon="github"
+    href="https://github.com/bbplayer-app/bbplayer"
+  >
+    Star us on GitHub and contribute
+  </Card>
+</CardGroup>
+
+## Tech Stack
+
+BBPlayer is built with modern technologies:
+
+- **Framework**: React Native, Expo
+- **State Management**: Zustand
+- **Data Fetching**: React Query (TanStack Query)
+- **UI**: React Native Paper (Material Design 3)
+- **Audio Engine**: [@bbplayer/orpheus](https://github.com/bbplayer-app/bbplayer/tree/main/packages/orpheus) (based on Media3)
+- **Database**: Drizzle ORM with SQLite
+- **Lyrics**: [@bbplayer/splash](https://github.com/bbplayer-app/bbplayer/tree/main/packages/splash) (SPL parser)
+
+## Platform Support
+
+<Note>
+  **Android**: Fully supported (Android 6.0+)
+  
+  **iOS**: Basic support exists but is not actively maintained. iOS builds may not work out of the box.
+</Note>
+
+## Privacy & Data Collection
+
+BBPlayer uses lightweight anonymous analytics (Firebase Analytics and Sentry) to improve the app:
+
+- **Usage Data**: Feature usage frequency, playback session duration
+- **Crash Reports**: Stack traces to help fix bugs
+- **No Personal Data**: We never collect account credentials, cookies, or browsing history
+- **Opt-Out Anytime**: Disable data sharing in Settings → General Settings
+
+All analytics code is open source and transparent.
+
+## Community & Support
+
+<CardGroup cols={2}>
+  <Card title="GitHub Issues" icon="github" href="https://github.com/bbplayer-app/bbplayer/issues">
+    Report bugs or request features
+  </Card>
+  <Card title="Discussions" icon="comments" href="https://github.com/bbplayer-app/bbplayer/discussions">
+    Join the community discussion
+  </Card>
+</CardGroup>
+
+## Open Source
+
+BBPlayer is MIT licensed and completely open source. Contributions are welcome!
+
+<Card title="Contributing Guide" icon="code-pull-request" href="/development/setup">
+  Learn how to contribute to BBPlayer
+</Card>

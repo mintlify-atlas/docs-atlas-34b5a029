@@ -1,80 +1,306 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start Guide
+description: Get started with BBPlayer in 5 minutes. Download, install, and start playing your favorite Bilibili audio content.
 ---
 
-## Get started in three steps
+# Quick Start Guide
 
-Get your documentation site running locally and make your first customization.
+Get up and running with BBPlayer in just a few minutes. This guide will take you from installation to playing your first track.
 
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
+## What You'll Need
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Android Device" icon="mobile">
+    Android 6.0 (Marshmallow) or higher
+  </Card>
+  <Card title="Bilibili Account" icon="user" iconType="duotone">
+    Optional, but recommended for accessing your favorites and collections
+  </Card>
 </CardGroup>
 
+## Installation
+
+<Steps>
+  <Step title="Download BBPlayer">
+    Visit the [GitHub Releases](https://github.com/bbplayer-app/bbplayer/releases) page and download the latest APK file.
+    
+    <Warning>
+      Download only from official sources. Avoid third-party app stores to ensure you get the authentic version.
+    </Warning>
+  </Step>
+  
+  <Step title="Install the APK">
+    1. Open the downloaded APK file on your Android device
+    2. If prompted, allow installation from unknown sources
+    3. Follow the on-screen installation prompts
+    4. Launch BBPlayer from your app drawer
+    
+    <Note>
+      First launch may take a few seconds as the app initializes the database and cache.
+    </Note>
+  </Step>
+  
+  <Step title="Grant Permissions">
+    BBPlayer will request the following permissions:
+    
+    - **Storage**: To cache audio files for offline playback
+    - **Network**: To stream audio and fetch metadata
+    - **Notifications** (optional): For playback controls in notification shade
+    
+    <Tip>
+      For the best experience, grant all permissions. You can always revoke them later in Android Settings.
+    </Tip>
+  </Step>
+</Steps>
+
+## First-Time Setup
+
+Once installed, follow these steps to set up BBPlayer:
+
+<Steps>
+  <Step title="Login to Bilibili (Optional)">
+    While you can use BBPlayer without logging in, signing in unlocks powerful features:
+    
+    - Access your Bilibili favorites and collections
+    - Sync your "Watch Later" playlist
+    - Subscribe to video series
+    
+    ### Login Methods
+    
+    <Tabs>
+      <Tab title="QR Code (Recommended)">
+        1. Tap the **Login** button on the home screen
+        2. Select **QR Code Login**
+        3. Open the Bilibili app on another device
+        4. Scan the QR code displayed in BBPlayer
+        5. Confirm login on your other device
+      </Tab>
+      
+      <Tab title="Cookie Login">
+        1. Tap the **Login** button
+        2. Select **Cookie Login**
+        3. Open Bilibili in a web browser and login
+        4. Copy the `SESSDATA` cookie from your browser
+        5. Paste it into BBPlayer
+        
+        <Warning>
+          Never share your cookies with anyone. Treat them like passwords.
+        </Warning>
+      </Tab>
+    </Tabs>
+  </Step>
+  
+  <Step title="Create Your First Playlist">
+    BBPlayer supports two types of playlists:
+    
+    ### Online Playlists (Synced from Bilibili)
+    
+    If you logged in:
+    1. Navigate to the **Library** tab
+    2. Tap **Favorites** or **Subscriptions**
+    3. Select any collection to view its contents
+    4. Tap the **Sync** button to create a local copy
+    
+    <Note>
+      Synced playlists stay in sync with Bilibili. Tap the cloud icon (☁️) to update them.
+    </Note>
+    
+    ### Local Playlists
+    
+    To create a completely local playlist:
+    1. Go to **Library** → **Playlists**
+    2. Tap the **+** button in the top-right corner
+    3. Enter a name and description
+    4. Start adding tracks from search or other playlists
+  </Step>
+  
+  <Step title="Add Songs to Your Playlist">
+    There are multiple ways to add songs:
+    
+    ### Method 1: Search for Tracks
+    
+    ```bash
+    1. Tap the search icon in the top bar
+    2. Enter keywords, BV/AV number, or b23.tv short link
+    3. Tap any result to play immediately or long-press to add to playlist
+    ```
+    
+    ### Method 2: Import from Music Services
+    
+    BBPlayer can import playlists from NetEase Cloud Music and QQ Music:
+    
+    1. Go to **Library** → **Playlists**
+    2. Tap the **Import** button
+    3. Choose **NetEase** or **QQ Music**
+    4. Paste the playlist URL or ID
+    5. BBPlayer will automatically match songs to Bilibili videos
+    
+    <Tip>
+      The matching algorithm searches by song title and artist. Results are usually accurate, but you can manually adjust mismatched tracks.
+    </Tip>
+    
+    ### Method 3: Add from Bilibili Directly
+    
+    If you're logged in, you can add tracks from your existing Bilibili collections:
+    1. Browse your favorites or subscriptions
+    2. Long-press any track
+    3. Select **Add to Playlist**
+  </Step>
+  
+  <Step title="Play Your First Song">
+    <Tabs>
+      <Tab title="From Playlist">
+        1. Open any playlist from the **Library** tab
+        2. Tap any song to start playback
+        3. The player interface will slide up from the bottom
+      </Tab>
+      
+      <Tab title="From Search">
+        1. Search for a song or video
+        2. Tap on the result to play immediately
+        3. Long-press for more options (add to queue, add to playlist, etc.)
+      </Tab>
+    </Tabs>
+    
+    <Note>
+      BBPlayer automatically extracts audio from Bilibili videos. Multi-part videos (分P) will show all parts for selection.
+    </Note>
+  </Step>
+</Steps>
+
+## Player Interface Overview
+
+Once a song is playing, here's what you can do:
+
+<AccordionGroup>
+  <Accordion title="Playback Controls">
+    - **Play/Pause**: Tap the center button
+    - **Skip**: Use the forward/backward buttons
+    - **Seek**: Drag the progress bar
+    - **Shuffle**: Tap the shuffle icon
+    - **Repeat**: Tap the repeat icon (off → all → one)
+  </Accordion>
+  
+  <Accordion title="Lyrics">
+    Lyrics appear automatically below the album art:
+    
+    - Tap any lyric line to jump to that timestamp
+    - Swipe down to view full lyrics
+    - Long-press a line to share as a card
+    - Tap the pencil icon to edit lyrics manually
+    
+    BBPlayer auto-fetches lyrics from multiple sources and supports:
+    - Word-by-word karaoke timing
+    - Romanization for non-Latin scripts
+    - Multi-language translations
+  </Accordion>
+  
+  <Accordion title="Queue Management">
+    Tap the **queue icon** in the bottom-right to:
+    
+    - View upcoming tracks
+    - Reorder songs by dragging
+    - Remove tracks from queue
+    - Save the current queue as a playlist
+  </Accordion>
+  
+  <Accordion title="More Options Menu">
+    Tap the **three dots** (⋮) in the top-right for:
+    
+    - Timer: Auto-pause after a set duration (perfect for bedtime)
+    - Share Song: Generate a beautiful share card
+    - Share Lyrics: Create a lyrics image
+    - Search Lyrics: Manually search if auto-fetch fails
+    - Download: Cache audio for offline playback
+  </Accordion>
+</AccordionGroup>
+
+## Download for Offline Playback
+
+<Steps>
+  <Step title="Download Individual Songs">
+    1. While playing a song, tap the **three dots** menu
+    2. Select **Cache Audio**
+    3. A checkmark (✓) will appear next to the song when download completes
+  </Step>
+  
+  <Step title="Download Entire Playlists">
+    1. Open any playlist
+    2. Tap the **download icon** (⬇) at the top of the playlist
+    3. BBPlayer will queue all tracks for download
+    4. Already downloaded songs are skipped automatically
+  </Step>
+  
+  <Step title="Manage Downloads">
+    1. Go to **Library** → Tap the **download icon** in the top-right
+    2. View all cached songs
+    3. Delete individual tracks to free up space
+    4. Export songs as .m4a files with embedded lyrics and metadata
+  </Step>
+</Steps>
+
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  **File Format**: Bilibili provides audio in M4S format. A typical song is 5-10MB.
+  
+  **Storage Location**: Downloads are stored in the app's private directory. Use the **Export** feature to save files to public storage.
 </Note>
+
+## Essential Settings
+
+Customize your experience in **Settings**:
+
+<Tabs>
+  <Tab title="Playback Settings">
+    - **Loudness Equalization**: Normalize volume across tracks
+    - **Resume Playback**: Auto-resume where you left off
+    - **Auto-play on Startup**: Start playing when app opens
+    - **Enable Comments**: Show Bilibili video comments in player
+    - **Desktop Lyrics**: Floating lyrics overlay (requires overlay permission)
+  </Tab>
+  
+  <Tab title="Appearance">
+    - **Theme**: Light, Dark, or System
+    - **Monet Colors**: Extract colors from album art
+    - **Material You**: Match system colors (Android 12+)
+  </Tab>
+  
+  <Tab title="Lyrics Settings">
+    - **Default Lyrics Source**: NetEase, QQ Music, or Kugou
+    - **Show Romanization**: Display romanized lyrics for Japanese/Chinese songs
+    - **Show Translation**: Display translated lyrics
+    - **Font Size**: Adjust lyrics text size
+  </Tab>
+  
+  <Tab title="Privacy">
+    - **Anonymous Analytics**: Help improve BBPlayer (opt-out anytime)
+    - **Crash Reports**: Send crash logs to developers
+  </Tab>
+</Tabs>
+
+## What's Next?
+
+<CardGroup cols={2}>
+  <Card title="Explore Features" icon="compass" href="/features/playback">
+    Dive deep into advanced playback features
+  </Card>
+  <Card title="Lyrics Guide" icon="music" href="/features/lyrics">
+    Master the advanced lyrics system
+  </Card>
+  <Card title="Import Playlists" icon="file-import" href="/features/import-playlists">
+    Learn how to import from other music services
+  </Card>
+  <Card title="Offline Playback" icon="wifi-slash" href="/guides/offline-playback">
+    Optimize your offline listening experience
+  </Card>
+</CardGroup>
+
+## Need Help?
+
+<CardGroup cols={2}>
+  <Card title="FAQ" icon="circle-question" href="/resources/faq">
+    Common questions and answers
+  </Card>
+  <Card title="Report Issues" icon="github" href="https://github.com/bbplayer-app/bbplayer/issues">
+    Found a bug? Let us know
+  </Card>
+</CardGroup>

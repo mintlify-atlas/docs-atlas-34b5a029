@@ -1,0 +1,352 @@
+---
+title: Offline Playback and Downloads
+description: Download audio from Bilibili for offline listening and manage your cached content
+---
+
+BBPlayer's offline playback feature lets you download audio tracks from Bilibili to your device for listening without an internet connection. This guide covers downloading, managing, and exporting your offline content.
+
+## How Downloads Work
+
+BBPlayer uses the **Orpheus** audio engine to handle downloads:
+
+- **Concurrent downloads**: Up to 3 tracks download simultaneously by default
+- **Queue management**: Downloads are queued and processed in order
+- **State persistence**: Download progress survives app restarts
+- **Smart caching**: Covers are downloaded separately and cached locally
+
+<Note>
+  Downloads are stored in the app's private storage and include both the audio file and track metadata for offline playback.
+</Note>
+
+## Downloading Single Tracks
+
+<Steps>
+  <Step title="Find the Track">
+    Navigate to any playlist, library view, or search results containing the track you want to download.
+  </Step>
+  
+  <Step title="Open Track Menu">
+    Tap the three-dot menu (⋮) next to the track.
+  </Step>
+  
+  <Step title="Select Download">
+    Tap **缓存音频** (Cache Audio) or the download icon.
+    
+    The track will be added to the download queue and begin downloading immediately if slots are available.
+  </Step>
+  
+  <Step title="Monitor Progress">
+    A download indicator appears next to the track showing:
+    - Download progress percentage
+    - Current state (queued, downloading, completed, failed)
+  </Step>
+</Steps>
+
+### Download States
+
+Tracks can be in one of these download states:
+
+- **Queued**: Waiting for an available download slot
+- **Downloading**: Actively downloading with progress indicator
+- **Completed**: Successfully downloaded and available offline (✓ icon)
+- **Failed**: Download encountered an error (⚠ icon)
+
+<Tip>
+  If a download fails, you can retry it from the download manager or track menu.
+</Tip>
+
+## Batch Downloading
+
+### Download Entire Playlist
+
+<Steps>
+  <Step title="Open Playlist">
+    Navigate to the playlist you want to download.
+  </Step>
+  
+  <Step title="Tap Download All">
+    In the playlist header, tap the download button (⬇️) and select **全部下载** (Download All).
+  </Step>
+  
+  <Step title="Confirm Download">
+    The app will calculate the number of tracks and total size (if available), then begin queuing all tracks.
+  </Step>
+</Steps>
+
+### Download Selected Tracks
+
+1. Long-press a track to enter selection mode
+2. Tap additional tracks to select them
+3. Tap the download icon in the top action bar
+4. Confirm batch download
+
+<Note>
+  Tracks already downloaded are skipped automatically. The download system uses `uniqueKey` to track which tracks are cached.
+</Note>
+
+## Managing Downloads
+
+### View Download Queue
+
+<Steps>
+  <Step title="Open Download Manager">
+    Go to **Settings** → **Download Tasks** (下载任务) or tap the download icon in a playlist header and select **查看下载任务** (View Download Tasks).
+  </Step>
+  
+  <Step title="Monitor Active Downloads">
+    The download manager shows:
+    - All queued, active, and failed downloads
+    - Real-time progress for active downloads
+    - Download speed and estimated time remaining
+  </Step>
+  
+  <Step title="Manage Individual Downloads">
+    For each download, you can:
+    - **Pause/Resume**: Tap to pause or resume (if supported)
+    - **Retry**: For failed downloads, tap retry
+    - **Cancel**: Remove from queue before completion
+  </Step>
+</Steps>
+
+### Clear Download Queue
+
+To remove all incomplete downloads:
+
+1. Open the download manager
+2. Tap **清空任务** (Clear All Tasks) in the header
+3. Confirm to cancel all queued and failed downloads
+
+<Note>
+  Clearing the queue only removes incomplete downloads. Already completed downloads remain in your library.
+</Note>
+
+## Viewing Downloaded Content
+
+<Steps>
+  <Step title="Access Downloaded Page">
+    From the main menu or settings, navigate to **下载管理** (Download Management).
+  </Step>
+  
+  <Step title="Browse Downloads">
+    View all successfully downloaded tracks with:
+    - Track title and artist
+    - Duration
+    - Download completion date
+    - Album artwork
+  </Step>
+  
+  <Step title="Search Downloads">
+    Tap the search icon (🔍) to filter downloaded tracks by title or artist.
+  </Step>
+</Steps>
+
+### Playing Downloaded Tracks
+
+Downloaded tracks work exactly like streamed tracks:
+
+- Tap any downloaded track to play it
+- Create playlists containing downloaded tracks
+- Downloaded tracks show a checkmark (✓) indicator
+- Playback uses local files with no network required
+
+<Tip>
+  Downloaded tracks can be played even when your device is completely offline. Lyrics are also cached separately for full offline support.
+</Tip>
+
+## Deleting Downloads
+
+### Delete Single Download
+
+1. Navigate to the downloaded tracks page
+2. Tap the menu (⋮) next to the track
+3. Select **删除** (Delete)
+4. Confirm deletion
+
+This removes both the audio file and download record.
+
+### Batch Delete Downloads
+
+<Steps>
+  <Step title="Enter Selection Mode">
+    Long-press any downloaded track to enter selection mode.
+  </Step>
+  
+  <Step title="Select Tracks">
+    Tap tracks to select them, or use:
+    - **Select All**: Top-right icon
+    - **Invert Selection**: Flip your selection
+  </Step>
+  
+  <Step title="Delete Selected">
+    Tap the trash icon in the action bar and confirm deletion.
+  </Step>
+</Steps>
+
+<Note>
+  Deleting a download removes the cached audio file but keeps the track in your library. You can re-download it anytime.
+</Note>
+
+## Exporting Downloads (Android Only)
+
+Export downloaded audio files to external storage:
+
+<Steps>
+  <Step title="Select Tracks to Export">
+    In the downloaded tracks page:
+    - Tap **导出** (Export) to export all downloads, OR
+    - Select specific tracks and tap the export icon
+  </Step>
+  
+  <Step title="Choose Destination">
+    Android's document picker will open. Navigate to your desired folder (e.g., Music, Downloads, SD card).
+  </Step>
+  
+  <Step title="Monitor Export Progress">
+    A progress modal shows:
+    - Current file being exported
+    - Total progress (e.g., "3 of 10")
+    - Success/failure status for each file
+  </Step>
+  
+  <Step title="Export Complete">
+    Files are saved to the selected directory with original metadata (title, artist, album art) embedded.
+  </Step>
+</Steps>
+
+<Accordion title="What format are exported files?">
+  Exported files maintain the same format as downloaded from Bilibili (typically M4A or MP3). Metadata including track title, artist name, and album artwork are embedded in the file tags.
+</Accordion>
+
+## Download Settings
+
+### Concurrent Download Limit
+
+Adjust how many tracks download simultaneously:
+
+1. Go to **Settings** → **Downloads**
+2. Change **最大并发下载数** (Max Concurrent Downloads)
+3. Options: 1-5 downloads at once
+
+<Tip>
+  More concurrent downloads = faster completion but higher bandwidth usage. Lower this if you experience network issues.
+</Tip>
+
+### Storage Management
+
+Check download storage usage:
+
+1. Go to **Settings** → **Storage**
+2. View **音频缓存** (Audio Cache) size
+3. Tap to see breakdown by playlist or source
+
+## Offline Playback Behavior
+
+When offline, BBPlayer:
+
+- **Plays downloaded tracks normally**: Full playback with seek, repeat, shuffle
+- **Shows cached lyrics**: Lyrics downloaded previously remain available
+- **Displays cover art**: Album art is cached separately for offline display
+- **Skips unavailable tracks**: Non-downloaded tracks in playlists are skipped automatically
+- **Disables streaming features**: Comments, related videos, and online search are unavailable
+
+### Offline Priority Playback
+
+When you play a playlist:
+
+1. BBPlayer checks which tracks are downloaded
+2. Downloaded tracks are prioritized in the queue
+3. Unavailable tracks are added to the end or skipped based on settings
+
+This ensures smooth playback without buffering interruptions.
+
+<Accordion title="Can I download while playing?">
+  Yes! The download system runs in the background independently of playback. You can continue listening while downloads proceed in the queue.
+</Accordion>
+
+## Troubleshooting
+
+<Accordion title="Download stuck at 0%">
+  **Possible causes:**
+  
+  1. Poor network connection
+  2. Server temporarily unavailable
+  3. Track URL expired (common for Bilibili content)
+  
+  **Solutions:**
+  
+  1. Check your internet connection
+  2. Cancel and retry the download
+  3. Try downloading a different track to test
+  4. If Bilibili content, ensure you're logged in with valid cookies
+  5. For expired URLs, refresh the playlist to get new playback URLs
+</Accordion>
+
+<Accordion title="Download failed immediately">
+  **Common reasons:**
+  
+  1. Track no longer available on Bilibili
+  2. Insufficient storage space
+  3. Network error during URL fetching
+  
+  **Solutions:**
+  
+  1. Check available storage in device settings
+  2. Verify the track is playable online first
+  3. Clear failed downloads and retry
+  4. Check app permissions for storage access
+</Accordion>
+
+<Accordion title="Downloaded tracks won't play offline">
+  **Checklist:**
+  
+  1. Verify track shows completed (✓) status
+  2. Check that download wasn't interrupted
+  3. Re-download the track if file may be corrupted
+  4. Ensure app has storage read permissions
+  5. Check that the file wasn't manually deleted from storage
+</Accordion>
+
+<Accordion title="Export fails on Android">
+  **Common issues:**
+  
+  1. Insufficient storage in destination folder
+  2. Permission denied for selected directory
+  3. SD card write protection
+  
+  **Solutions:**
+  
+  1. Try exporting to internal storage first
+  2. Grant all file access permissions if requested
+  3. Select a different destination folder
+  4. Ensure SD card is mounted and writable
+</Accordion>
+
+<Accordion title="Can't delete downloads">
+  If deletion fails:
+  
+  1. Close and reopen the app
+  2. Check if the file is currently playing
+  3. Clear app cache in Android settings
+  4. As a last resort, reinstall the app (this will delete all downloads)
+</Accordion>
+
+## Best Practices
+
+1. **Download on Wi-Fi**: Save mobile data by downloading only when connected to Wi-Fi
+2. **Manage storage proactively**: Regularly review and delete downloads you no longer need
+3. **Download playlists for trips**: Pre-download full playlists before traveling to areas with poor connectivity
+4. **Use selection mode**: Batch operations are faster than one-by-one downloads
+5. **Export backups**: Periodically export important downloads to external storage as backup
+6. **Monitor failed downloads**: Check the download manager occasionally for failed tasks
+7. **Clear queue before bulk downloads**: Remove failed tasks before starting large batch downloads to avoid clutter
+
+## Storage Considerations
+
+- **Average track size**: 3-6 MB per track (varies by quality and duration)
+- **Cover art cache**: ~100-200 KB per unique album cover
+- **Lyrics cache**: Negligible (~1-5 KB per track)
+- **Recommended free space**: Keep at least 500 MB free for smooth operation
+
+<Tip>
+  You can check total storage used by downloads in Settings → Storage → Audio Cache.
+</Tip>

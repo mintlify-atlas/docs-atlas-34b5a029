@@ -1,0 +1,375 @@
+---
+title: Building BBPlayer
+description: Build production-ready APKs for Android and iOS
+---
+
+## Build Variants
+
+BBPlayer uses different build variants for various stages of development and release. These are configured in `eas.json` in the mobile app directory.
+
+<Note>
+  BBPlayer primarily targets **Android**. iOS builds are not actively maintained and may not compile successfully.
+</Note>
+
+## EAS Build Profiles
+
+Expo Application Services (EAS) manages build configurations:
+
+| Profile | Purpose | Distribution | ABI Filters | Channel |
+|---------|---------|--------------|-------------|----------|
+| `dev` | Development builds | Internal | arm64-v8a | development |
+| `preview` | Internal testing | Internal | arm64-v8a | preview |
+| `prod-v8a` | Production (64-bit) | Public | arm64-v8a | production |
+| `prod-universal` | Universal APK | Public | All ABIs | production |
+| `prod-ci` | CI/CD builds | Public | Auto | production |
+
+### Understanding ABI Filters
+
+**ABI (Application Binary Interface)** determines which CPU architectures the APK supports:
+
+- `arm64-v8a` - 64-bit ARM (most modern devices) - **smallest file size**
+- `armeabi-v7a` - 32-bit ARM (older devices)
+- `x86` - 32-bit x86 (emulators, rare devices)
+- `x86_64` - 64-bit x86 (some tablets, emulators)
+
+<Tip>
+  For public releases, use `prod-v8a` for most users (smaller file size) and `prod-universal` for maximum compatibility.
+</Tip>
+
+## Local Development Builds
+
+### Android Debug Build
+
+Build and run a debug APK on a connected device or emulator:
+
+```bash
+cd apps/mobile
+pnpm android
+```
+
+This command:
+1. Runs `expo run:android` with Rozenite metro plugins enabled
+2. Builds a debug APK
+3. Installs it on your device/emulator
+4. Starts the Metro bundler
+
+<Note>
+  Debug builds include development tools and are not optimized for performance. Use them only during development.
+</Note>
+
+## Production Builds with EAS
+
+### Prerequisites
+
+<Steps>
+  <Step title="Install EAS CLI">
+    ```bash
+    npm install -g eas-cli
+    ```
+  </Step>
+
+  <Step title="Login to Expo">
+    ```bash
+    eas login
+    ```
+  </Step>
+
+  <Step title="Configure project">
+    If building for the first time:
+    ```bash
+    cd apps/mobile
+    eas build:configure
+    ```
+  </Step>
+</Steps>
+
+### Build Production APK (arm64-v8a)
+
+Build an optimized APK for 64-bit ARM devices:
+
+```bash
+cd apps/mobile
+eas build --profile prod-v8a --platform android
+```
+
+**Environment variables set:**
+- `APP_VARIANT=production`
+- `ABI_FILTERS=arm64-v8a`
+
+This creates the **smallest APK** suitable for most modern Android devices.
+
+### Build Universal APK
+
+Build an APK supporting all architectures:
+
+```bash
+cd apps/mobile
+eas build --profile prod-universal --platform android
+```
+
+**Environment variables set:**
+- `APP_VARIANT=production`
+- `ABI_FILTERS=armeabi-v7a,arm64-v8a,x86,x86_64`
+
+<Warning>
+  Universal APKs are significantly larger (2-4x) than single-architecture APKs. Only use for maximum compatibility.
+</Warning>
+
+### Build Preview Version
+
+Create an internal preview build for testing:
+
+```bash
+cd apps/mobile
+eas build --profile preview --platform android
+```
+
+Preview builds:
+- Include production optimizations
+- Have internal distribution settings
+- Use the preview update channel
+
+## Local Production Builds
+
+You can build production APKs locally without EAS:
+
+<Steps>
+  <Step title="Set environment variables">
+    ```bash
+    export APP_VARIANT=production
+    export ABI_FILTERS=arm64-v8a
+    ```
+  </Step>
+
+  <Step title="Build release APK">
+    ```bash
+    cd apps/mobile/android
+    ./gradlew :app:assembleRelease
+    ```
+  </Step>
+
+  <Step title="Locate the APK">
+    The APK will be generated at:
+    ```
+    apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+  Local release builds are **unsigned**. You'll need to sign them manually before distribution:
+  
+  ```bash
+  jarsigner -keystore your-keystore.jks \
+    -storepass your-password \
+    app-release.apk \
+    your-key-alias
+  ```
+</Warning>
+
+## iOS Builds (Experimental)
+
+<Warning>
+  iOS support is **not actively maintained**. The build process may fail. The project focuses on Android development.
+</Warning>
+
+If you want to attempt an iOS build:
+
+### Prerequisites
+
+- macOS with Xcode 15+
+- Apple Developer account
+- Provisioning profiles configured
+
+### Build iOS
+
+```bash
+cd apps/mobile
+eas build --profile prod-v8a --platform ios
+```
+
+<Note>
+  iOS builds are not regularly tested. Expect compilation errors and platform-specific issues.
+</Note>
+
+## Build Configuration Details
+
+### App Variants
+
+The `APP_VARIANT` environment variable controls build behavior:
+
+<CodeGroup>
+```typescript Development
+APP_VARIANT=development
+// Enables:
+// - Debug logging
+// - React DevTools
+// - Hot reloading
+// - Development warnings
+```
+
+```typescript Preview
+APP_VARIANT=preview
+// Enables:
+// - Production optimizations
+// - Internal analytics
+// - Preview update channel
+// - Beta features
+```
+
+```typescript Production
+APP_VARIANT=production
+// Enables:
+// - Full optimizations
+// - Public analytics
+// - Production update channel
+// - Stable features only
+```
+</CodeGroup>
+
+### Metro Bundler Plugins
+
+The mobile app uses **Rozenite** plugins for enhanced development:
+
+```bash
+WITH_ROZENITE=true pnpm start
+```
+
+Rozenite provides:
+- **MMKV plugin** - Storage inspection
+- **TanStack Query plugin** - Query devtools
+- **Require profiler** - Module load time profiling
+
+<Tip>
+  Rozenite plugins are development-only and automatically disabled in production builds.
+</Tip>
+
+## Signing and Release
+
+### Generate Keystore
+
+For manual signing, create a keystore:
+
+```bash
+keytool -genkey -v -keystore bbplayer-release.jks \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -alias bbplayer-key
+```
+
+### Configure Gradle
+
+Add signing configuration to `apps/mobile/android/app/build.gradle`:
+
+```gradle
+android {
+    signingConfigs {
+        release {
+            storeFile file('bbplayer-release.jks')
+            storePassword 'your-password'
+            keyAlias 'bbplayer-key'
+            keyPassword 'your-password'
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+        }
+    }
+}
+```
+
+<Warning>
+  Never commit keystore files or passwords to version control! Use environment variables or secure credential storage.
+</Warning>
+
+## Continuous Integration
+
+The `prod-ci` profile is designed for CI/CD pipelines:
+
+```yaml
+# Example GitHub Actions
+name: Build APK
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10.26.2
+      - run: pnpm install
+      - run: eas build --profile prod-ci --platform android --non-interactive
+```
+
+## Troubleshooting
+
+### Build Fails with "Out of Memory"
+
+Increase Gradle memory in `apps/mobile/android/gradle.properties`:
+
+```properties
+org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=512m
+```
+
+### ABI Filter Issues
+
+If the app crashes on certain devices, ensure the correct ABI is included:
+
+```bash
+# Check supported ABIs in the APK
+unzip -l app-release.apk | grep "\.so$"
+```
+
+### Metro Bundler Errors
+
+Clear Metro cache:
+
+```bash
+cd apps/mobile
+pnpm start --clear
+```
+
+### Native Module Build Errors
+
+Rebuild native modules:
+
+<CodeGroup>
+```bash Android
+cd apps/mobile/android
+./gradlew clean
+cd ..
+pnpm android
+```
+
+```bash iOS (if attempting)
+cd apps/mobile/ios
+rm -rf Pods Podfile.lock
+pod install
+cd ..
+pnpm ios
+```
+</CodeGroup>
+
+## Distribution
+
+Once you have a signed APK:
+
+1. **GitHub Releases** - Upload to GitHub for direct downloads
+2. **Google Play** - Submit via Play Console
+3. **Alternative Stores** - F-Droid, APKPure, etc.
+
+<Tip>
+  BBPlayer releases are distributed via [GitHub Releases](https://github.com/bbplayer-app/bbplayer/releases). Check there for official builds.
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Development Setup" icon="screwdriver-wrench" href="/development/setup">
+    Return to environment setup guide
+  </Card>
+  <Card title="Project Structure" icon="folder-tree" href="/development/project-structure">
+    Understand the codebase organization
+  </Card>
+</CardGroup>

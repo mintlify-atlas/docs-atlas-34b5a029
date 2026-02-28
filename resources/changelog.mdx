@@ -1,0 +1,291 @@
+---
+title: Changelog
+description: Version history and release notes for BBPlayer
+icon: clock-rotate-left
+---
+
+<Info>
+  View all releases on [GitHub Releases](https://github.com/bbplayer-app/bbplayer/releases)
+</Info>
+
+## v2.3.2
+
+<Note>Released: February 25, 2026</Note>
+
+### New Features
+
+- Added NowPlayingBar to all settings sub-pages
+- Display total duration for local playlists
+- **Orpheus**: Synchronized cover image download with audio, improving offline playback experience
+- **Orpheus**: Global image local cache mechanism based on Glide LRU strategy (default 250MB limit)
+- Optimized local playlist display logic when offline, highlighting downloaded and auto-cached songs
+- Drag-to-reorder support in local playlists (multi-select mode with automatic scrolling)
+
+### Changes
+
+- Replaced player control buttons with Lottie animations with optimistic state updates
+- Migrated local playlist sorting from integer `order` to Fractional Indexing (updates single row instead of full shift)
+- **Orpheus**: Optimized media notification to prioritize locally downloaded cover images
+- **Orpheus**: Auto-rebuild player instance when destroyed
+- Refactored danmaku loading to avoid infinite loading on weak/no network
+- Optimized lyrics loading: return "not found" immediately when offline with no cache
+- Migrated from `@pchmn/expo-material3-theme` to Expo Router's native `Color` API for dynamic colors
+- Improved Sentry error reporting rules, filtering out non-critical player errors
+- Replaced `react-native-paper` button implementation with RNGH components for better performance
+- Moved protobuf compilation to `prepare` stage for automatic generation
+- Restored player page swipe interactions
+- Refactored lyrics page using ScrollView for better scrolling performance
+- Refactored home page user info display logic
+- Refactored settings page routing structure as independent stack
+
+### Bug Fixes
+
+- Fixed issue where dragging songs to bottom of partially loaded playlist moved them to end of full list
+- Fixed Lottie icon `colorFilters` not working (always showing red)
+- Fixed infinite loading when disconnecting after app startup
+- **Orpheus**: Fixed desktop lyrics remaining locked and blocking interactions after app restart
+- Fixed `b23.tv` short link parsing by extracting from HTML response
+- Fixed player controls overlapping system navigation bar on devices with 3-button navigation
+- Fixed crashes from missing `playlist` or `creator` fields when fetching NetEase Cloud Music playlists
+- Fixed share failures from rapid clicking, added loading state feedback
+- **Orpheus**: Fixed parsing errors when player `data` is empty
+- Fixed occasional white block at bottom of player page
+- Fixed excessive network error toasts when offline
+- **Orpheus**: Fixed desktop lyrics drag boundary detection to prevent dragging into status bar
+- **Orpheus**: Fixed `onDestroy` method running on unexpected thread
+
+<Warning>
+  **For users who previously downloaded songs**: Go to `Settings > General` and tap "Download Missing Covers" to ensure cover images display when offline.
+</Warning>
+
+---
+
+## v2.3.1
+
+<Note>Released: February 9, 2026</Note>
+
+### Bug Fixes
+
+- Fixed player page buttons being unclickable in v2.3.0
+
+<Warning>
+  This is a critical hotfix for v2.3.0. All v2.3.0 users should update immediately.
+</Warning>
+
+---
+
+## v2.3.0
+
+<Note>Released: February 8, 2026</Note>
+
+### New Features
+
+<Accordion title="Cross-Platform Playlist Import">
+  Import playlists from **QQ Music** and **NetEase Cloud Music** with automatic Bilibili video matching.
+  
+  This feature makes it easy to bring your favorite playlists from other platforms into BBPlayer.
+</Accordion>
+
+<Accordion title="Danmaku Support">
+  The player page now displays Bilibili danmaku (comments) while listening to music.
+  
+  Experience the authentic Bilibili atmosphere while enjoying your favorite tracks.
+</Accordion>
+
+<Accordion title="Enhanced Lyrics">
+  - NetEase Cloud Music **word-by-word lyrics** support
+  - **Romaji** annotations for Japanese songs
+  - Toggle between translation and romaji display
+  - Added Kugou Music as lyrics source
+  
+  <Info>
+    For songs with cached lyrics, clear the lyrics cache in `Settings > General > Developer` to enable word-by-word and romaji features.
+  </Info>
+</Accordion>
+
+<Accordion title="Improved Interactions">
+  - Double-tap playlist header to quickly scroll to top
+  - Swipe down to close player page
+  - Playlist background color follows cover theme
+  - Player title with smooth gradient effects
+  - Loading indicators for lazy-loaded modals
+  - Lyrics editor with format validation and error highlighting
+</Accordion>
+
+### Changes
+
+- Switched player network library (orpheus) from Cronet to **OkHttp** for better stability
+- Reorganized all lyrics settings into dedicated "Lyrics" category
+- Enhanced background service logic for better player retention
+- Enabled R8 obfuscation and removed redundant dependencies (Reanimated Static Flags)
+- Database migration optimization: cache schema version to skip redundant SQL queries
+- Migrated all `@roitium` packages to `@bbplayer` scope
+- Refactored `KaraokeWord` component for better rendering performance
+- Integrated Firebase Analytics
+- Added `testID` to key UI components for Maestro E2E testing
+
+### Bug Fixes
+
+- Fixed single-loop mode stopping instead of looping after last track ([#199](https://github.com/bbplayer-app/bbplayer/issues/199))
+- Fixed play button not working after playlist ends (now restarts from beginning)
+- Fixed crashes from invalid cookie key names (e.g., newlines), added auto-fix prompt
+- Fixed `DonationQRModal` crashes on some devices due to incorrect import method
+- Fixed `FileSystemError` incorrectly reported to Sentry during lyrics search failures
+- Small/narrow screen optimizations:
+  - Fixed progress bar time wrapping
+  - Improved playlist layout
+  - Player page now scrollable for full content access
+- Fixed uninitialized `ToastContext` and `reportErrorToSentry` type errors
+- Fixed React Compiler optimization being skipped in stores like `external-sync`
+
+<Warning>
+  For previously cached lyrics, you need to clear the lyrics cache to get word-by-word and romaji support. See the Enhanced Lyrics section above.
+</Warning>
+
+---
+
+## v2.2.4
+
+<Note>Released: January 30, 2026</Note>
+
+### New Features
+
+- Audio spectrum visualizer during playback (enable in `Settings > Appearance > Show Audio Spectrum`)
+
+### Changes
+
+- Migrated project architecture to Monorepo
+- Moved TypeScript and related dependencies to root `package.json`
+- Replaced `react-native-awesome-gallery` with `@nandorojo/galeria`
+- Integrated `react-native-fast-squircle` for Squircle corner radius in main UI
+- Unified list item sizes and corner radius design
+- Renamed project directory from `apps/bbplayer` to `apps/mobile`
+
+### Bug Fixes
+
+- Fixed playlist search incorrectly filtering out remote playlists
+- Fixed ANR (Application Not Responding) issues on player page
+
+<Warning>
+  **New users**: Please install the nightly build version instead, as this version has issues with the initialization flow.
+</Warning>
+
+---
+
+## v2.2.3
+
+<Note>Released: January 28, 2026</Note>
+
+### New Features
+
+- Sync local playlists to Bilibili favorites (experimental - may trigger rate limiting)
+- Favorite sync now shows detailed progress modal
+- Basic iOS platform adaptation
+
+### Improvements
+
+**Performance:**
+- Used `useDeferredValue` to optimize input responsiveness in local playlists, playlist details, and home search
+- Used `useTransition` to optimize music library tab switching
+- Enabled Reanimated Static Flags for better UI update performance
+
+**Architecture:**
+- Refactored player Hooks with global Zustand store for playback state
+- Refactored `RemoteTrackList` and `LocalTrackList` components
+- Integrated commitlint and lefthook for commit message standards
+
+**Fixes & Adjustments:**
+- Fixed Deep Link navigation on cold start, updated host to `app.bbplayer.roitium.com`
+- Prevent duplicate names when creating/modifying songs or playlists
+- Temporarily disabled Dolby / Hi-Res audio source options
+- Refactored modal masks using react-native-keyboard-controller
+
+---
+
+## v2.2.2
+
+<Note>Released: January 26, 2026</Note>
+
+### New Features
+
+- Playback controls overlay on lyrics page ([#164](https://github.com/bbplayer-app/bbplayer/pull/164))
+- Display buffering progress on player page
+- Auto-pause when Bluetooth devices disconnect
+
+### Improvements
+
+- Switched to sonner-native for toast notifications
+- Direct URL support for cover color extraction
+- Fixed delayed playback info updates after track changes ([#153](https://github.com/bbplayer-app/bbplayer/pull/153), [#159](https://github.com/bbplayer-app/bbplayer/pull/159))
+- Optimized progress bar drag logic to prevent rollback
+- Added debounce to play button
+- Upgraded to expo55-beta
+- Added Nightly build workflow
+- Version Code based on commit count
+
+---
+
+## v2.2.0
+
+<Note>Released: January 23, 2026</Note>
+
+### New Features
+
+- Local playlist search functionality
+- Share song and lyrics cards
+- Jump to and highlight specific video part in multi-part video playlists
+
+### Improvements
+
+- Refactored dropdown menus to bottom sheet style
+- Replaced `@gorhom/bottom-sheet` with TrueSheet for better performance
+- Added mask overlay to playlist modals ([#146](https://github.com/bbplayer-app/bbplayer/pull/146))
+- Updated project dependencies
+
+---
+
+## Earlier Versions
+
+<Info>
+  For releases prior to v2.2.0, please visit the [GitHub Releases page](https://github.com/bbplayer-app/bbplayer/releases).
+</Info>
+
+---
+
+## Release Channels
+
+### Stable Releases
+
+Stable versions are thoroughly tested and recommended for daily use. Download from [GitHub Releases](https://github.com/bbplayer-app/bbplayer/releases).
+
+### Nightly Builds
+
+Nightly builds contain the latest features and fixes but may be unstable. Use at your own risk.
+
+<Warning>
+  Nightly builds are for testing purposes only. They may contain bugs or incomplete features.
+</Warning>
+
+---
+
+## Version Naming
+
+BBPlayer follows semantic versioning:
+
+- **Major** (X.0.0): Significant changes, potential breaking changes
+- **Minor** (0.X.0): New features, improvements
+- **Patch** (0.0.X): Bug fixes, minor improvements
+
+---
+
+## Contributing to Changelog
+
+BBPlayer is open source! If you'd like to contribute:
+
+1. Check out the [GitHub repository](https://github.com/bbplayer-app/bbplayer)
+2. Read the contribution guidelines
+3. Submit pull requests with clear descriptions
+
+<Info>
+  All commits follow conventional commit standards for automatic changelog generation.
+</Info>

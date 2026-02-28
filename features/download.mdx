@@ -1,0 +1,495 @@
+---
+title: 'Download & Offline Playback'
+description: 'Download tracks for offline playback with metadata preservation and batch export functionality'
+---
+
+BBPlayer's download system enables offline listening with full metadata support, queue management, and audio file export capabilities.
+
+## Download System Architecture
+
+Downloads are managed by the Orpheus native module, providing robust and efficient background downloading.
+
+### Core Features
+
+<Accordion title="Background Downloads">
+  - Continue downloading even when app is closed
+  - Automatic retry on network failures
+  - Resume support for interrupted downloads
+  - Download queue with concurrent task management
+</Accordion>
+
+<Accordion title="Metadata Preservation">
+  Downloaded files include:
+  - Track title and artist
+  - Album artwork
+  - Duration and bitrate
+  - Source information (BVID, CID)
+  - Custom metadata for BBPlayer
+</Accordion>
+
+<Accordion title="Storage Management">
+  - Efficient file organization
+  - Automatic cleanup of incomplete downloads
+  - Storage space monitoring
+  - Duplicate detection
+</Accordion>
+
+## Starting a Download
+
+Download individual tracks or entire playlists directly from the app.
+
+### Download Single Track
+
+<Steps>
+  <Step title="Access Track Menu">
+    From any track list (playlist, search results, etc.), tap the **three-dot menu** next to the track.
+  </Step>
+  
+  <Step title="Select Download">
+    Choose **"下载"** (Download) from the menu. The track is added to the download queue immediately.
+  </Step>
+  
+  <Step title="Monitor Progress">
+    A notification appears showing download progress. Access the full download manager from **Settings > Downloads** or the toolbar icon.
+  </Step>
+</Steps>
+
+### Download Playlist
+
+<Steps>
+  <Step title="Open Playlist Menu">
+    From the playlist detail screen, tap the menu icon in the toolbar.
+  </Step>
+  
+  <Step title="Select Download All">
+    Choose **"下载全部"** (Download All). BBPlayer will:
+    - Validate all tracks are available
+    - Add them to the download queue
+    - Start downloading concurrently
+  </Step>
+  
+  <Step title="Batch Progress">
+    View progress of all downloads in the download manager. Completed downloads appear in the **"已下载"** (Downloaded) tab.
+  </Step>
+</Steps>
+
+## Download Manager
+
+The download manager (`apps/mobile/src/app/download.tsx`) provides comprehensive control over active and completed downloads.
+
+### Active Downloads View
+
+Monitor in-progress downloads with real-time updates:
+
+<Tabs>
+  <Tab title="Download States">
+    Each download task can be in one of several states:
+    
+    - **Pending**: Queued, waiting to start
+    - **Downloading**: Actively downloading
+    - **Paused**: Manually paused by user
+    - **Failed**: Download error occurred
+    - **Completed**: Successfully downloaded
+  </Tab>
+  
+  <Tab title="Progress Information">
+    For each active download:
+    - Progress percentage (0-100%)
+    - Download speed (KB/s or MB/s)
+    - Time remaining estimate
+    - File size (downloaded / total)
+  </Tab>
+  
+  <Tab title="Task Actions">
+    Available actions per task:
+    - **Pause**: Temporarily stop download
+    - **Resume**: Continue paused download
+    - **Cancel**: Remove from queue and delete partial file
+    - **Retry**: Restart failed download
+  </Tab>
+</Tabs>
+
+### Downloaded Content View
+
+Access all completed downloads from the **Downloaded** screen:
+
+```typescript
+// Filter completed downloads (apps/mobile/src/app/downloaded.tsx:220-222)
+const completedTasks = (allTasks ?? []).filter(
+  (t) => t.state === DownloadState.COMPLETED,
+)
+```
+
+<Info>
+Downloaded tracks can be played without an internet connection and include all metadata for a seamless offline experience.
+</Info>
+
+### Download Management Actions
+
+<Steps>
+  <Step title="Clear Completed">
+    Remove all completed download records (files remain cached):
+    ```typescript
+    await Orpheus.clearUncompletedDownloadTasks()
+    ```
+  </Step>
+  
+  <Step title="Search Downloads">
+    Use the search bar to filter by:
+    - Track title
+    - Artist name
+    - Album name
+  </Step>
+  
+  <Step title="Select Multiple">
+    Long-press any item to enter selection mode, then:
+    - Select all / invert selection
+    - Delete selected
+    - Export selected
+  </Step>
+</Steps>
+
+## Offline Playback
+
+Downloaded tracks are seamlessly integrated into the playback system.
+
+### How It Works
+
+<Accordion title="Automatic Fallback">
+  When playing a track:
+  1. Check if download exists locally
+  2. If yes, use local file (no network required)
+  3. If no, stream from Bilibili servers
+  
+  This happens transparently - you don't need to manually select offline mode.
+</Accordion>
+
+<Accordion title="Offline Detection">
+  BBPlayer detects offline status and:
+  - Automatically uses downloaded files
+  - Disables network-dependent features
+  - Shows offline indicator in UI
+  - Prevents streaming attempts
+</Accordion>
+
+<Accordion title="Metadata Availability">
+  All track information is available offline:
+  - Title, artist, album
+  - Cover artwork (cached)
+  - Lyrics (if previously fetched)
+  - Duration and bitrate
+</Accordion>
+
+### Offline-Specific Features
+
+- **Offline playlists**: Filter playlists to show only downloaded tracks
+- **Storage usage**: View total space used by downloads
+- **Download queue**: Pre-download playlists before going offline
+
+## Audio Export
+
+Export downloaded audio files to external storage (Android only).
+
+<Warning>
+Audio export is currently only available on Android due to platform file system limitations. iOS support is planned for future releases.
+</Warning>
+
+### Export Process
+
+<Steps>
+  <Step title="Select Tracks to Export">
+    In the Downloaded screen:
+    - Tap **Export** icon to export all
+    - Or enter selection mode to export specific tracks
+  </Step>
+  
+  <Step title="Choose Destination">
+    Select a directory using the Android document picker:
+    ```typescript
+    const directoryUri = await Orpheus.selectDirectory()
+    ```
+    
+    <Note>
+    BBPlayer uses Android's Storage Access Framework (SAF) for secure, user-controlled file access.
+    </Note>
+  </Step>
+  
+  <Step title="Export Progress">
+    A modal displays export progress:
+    - Files exported: X / Y
+    - Current file name
+    - Overall progress percentage
+    - Success/failure status per file
+  </Step>
+  
+  <Step title="Completion">
+    Exported files include:
+    - Audio in original format (usually AAC or M4A)
+    - Embedded metadata (ID3 tags)
+    - Cover artwork
+    - Filename: `{Artist} - {Title}.m4a`
+  </Step>
+</Steps>
+
+### Export Modal Component
+
+```typescript
+// Export progress modal (apps/mobile/src/components/modals/settings/ExportDownloadsProgressModal.tsx)
+<ExportDownloadsProgressModal
+  sheetRef={exportSheetRef}
+  ids={selectedIds}
+  destinationUri={targetDirectory}
+/>
+```
+
+**Features:**
+- Real-time progress updates
+- Error handling per file
+- Cancel operation support
+- Success summary
+
+## Download Settings
+
+Configure download behavior in **Settings > General**:
+
+### Network Settings
+
+<Tabs>
+  <Tab title="Download on Cellular">
+    Control whether downloads can use mobile data:
+    - **Enabled**: Download over any connection
+    - **Disabled**: Wi-Fi only (recommended)
+    
+    <Warning>
+    Downloads can consume significant data. Enable cellular downloads only if you have an unlimited plan.
+    </Warning>
+  </Tab>
+  
+  <Tab title="Concurrent Downloads">
+    Set maximum simultaneous downloads:
+    - Default: 3 concurrent tasks
+    - Range: 1-5 tasks
+    - Higher values = faster batch downloads but more resource usage
+  </Tab>
+  
+  <Tab title="Auto-Retry">
+    Automatically retry failed downloads:
+    - Retry count: 3 attempts
+    - Exponential backoff delay
+    - Permanent failure after max retries
+  </Tab>
+</Tabs>
+
+### Audio Quality
+
+<Info>
+BBPlayer downloads the highest quality audio available from Bilibili, typically 320kbps AAC or FLAC when available.
+</Info>
+
+Quality selection:
+- **Auto**: Highest available quality
+- **High (320kbps)**: AAC 320kbps
+- **Medium (192kbps)**: AAC 192kbps
+- **Low (128kbps)**: AAC 128kbps (saves storage)
+
+### Storage Location
+
+Downloads are stored in the app's private cache directory:
+
+```
+Android: /data/data/com.bbplayer/cache/downloads/
+iOS: Library/Caches/downloads/
+```
+
+<Note>
+Files in cache may be cleared by the system when storage is low. For permanent storage, export files to external storage.
+</Note>
+
+## Download Queue Management
+
+The download queue system manages concurrent downloads efficiently.
+
+### Queue Behavior
+
+<Accordion title="Priority System">
+  Downloads are processed in order:
+  1. User-initiated single downloads (highest priority)
+  2. Manual queue additions
+  3. Batch playlist downloads
+  
+  You can reorder the queue by dragging items in the download manager.
+</Accordion>
+
+<Accordion title="Concurrency Control">
+  ```typescript
+  // Maximum concurrent downloads
+  const MAX_CONCURRENT = 3
+  
+  // Queue processes next task when one completes
+  // Prevents overwhelming network and system resources
+  ```
+</Accordion>
+
+<Accordion title="Error Handling">
+  Failed downloads:
+  - Remain in queue with error status
+  - Show error reason (network, unavailable, permission)
+  - Can be manually retried
+  - Auto-retry if enabled in settings
+</Accordion>
+
+### Clearing Failed Downloads
+
+Quickly remove all failed tasks:
+
+```typescript
+// Clear button in download manager (apps/mobile/src/app/download.tsx:72-77)
+onClearAll={async () => {
+  await Orpheus.clearUncompletedDownloadTasks()
+  await queryClient.invalidateQueries({
+    queryKey: orpheusQueryKeys.downloadTasks(),
+  })
+}}
+```
+
+## Download API Reference
+
+The Orpheus module provides programmatic download control:
+
+### Start Download
+
+```typescript
+const downloadId = await Orpheus.startDownload({
+  url: audioUrl,
+  track: {
+    title: 'Song Title',
+    artist: 'Artist Name',
+    artwork: coverUrl,
+    duration: 240,
+    ...metadata
+  }
+})
+```
+
+### Control Downloads
+
+```typescript
+// Pause download
+await Orpheus.pauseDownload(downloadId)
+
+// Resume paused download
+await Orpheus.resumeDownload(downloadId)
+
+// Cancel and remove
+await Orpheus.removeDownload(downloadId)
+
+// Retry failed download
+await Orpheus.retryDownload(downloadId)
+```
+
+### Query Downloads
+
+```typescript
+// Get all download tasks
+const tasks = await Orpheus.getAllDownloadTasks()
+
+// Get completed downloads only
+const completed = tasks.filter(t => t.state === DownloadState.COMPLETED)
+
+// Check if track is downloaded
+const isDownloaded = await Orpheus.isTrackDownloaded(trackId)
+```
+
+### Select Directory (Android)
+
+```typescript
+// Open Android SAF directory picker
+const uri = await Orpheus.selectDirectory()
+// Returns: content://com.android.externalstorage.documents/tree/...
+```
+
+## Troubleshooting
+
+### Downloads Keep Failing
+
+<Steps>
+  <Step title="Check Network">
+    - Verify internet connection
+    - Try switching between Wi-Fi and cellular
+    - Check if Bilibili is accessible
+  </Step>
+  
+  <Step title="Check Storage">
+    - Ensure sufficient free space
+    - Clear app cache if needed
+    - Check storage permissions
+  </Step>
+  
+  <Step title="Check Authentication">
+    - Verify Bilibili login is valid
+    - Re-login if session expired
+    - Some tracks require authentication
+  </Step>
+</Steps>
+
+### Download Stuck at 0%
+
+- Kill and restart the app
+- Remove and re-add the download
+- Check if track is still available on Bilibili
+- Verify audio URL hasn't expired
+
+### Export Fails on Android
+
+- Grant storage permission when prompted
+- Ensure destination directory is writable
+- Check available space on external storage
+- Try selecting a different directory
+
+### Downloaded Files Not Playing
+
+- Verify download completed successfully (100%)
+- Check file integrity in download manager
+- Re-download if file is corrupted
+- Report issue with track BVID for investigation
+
+### High Storage Usage
+
+<Steps>
+  <Step title="View Storage Details">
+    Settings > General > Storage shows breakdown of space usage.
+  </Step>
+  
+  <Step title="Delete Unused Downloads">
+    - Enter selection mode in Downloaded tab
+    - Select tracks to remove
+    - Tap delete to free up space
+  </Step>
+  
+  <Step title="Export and Delete">
+    - Export important tracks to external storage
+    - Delete from app cache
+    - Re-download when needed
+  </Step>
+</Steps>
+
+## Performance Tips
+
+<Tip>
+**For Best Download Performance:**
+- Download over Wi-Fi when possible
+- Keep app in foreground during large downloads
+- Don't exceed 3 concurrent downloads
+- Close other apps to free up resources
+- Ensure battery optimization is disabled for BBPlayer
+</Tip>
+
+### Battery Optimization
+
+On Android, disable battery optimization to prevent download interruption:
+
+1. Go to Android Settings > Apps > BBPlayer
+2. Battery > Battery optimization
+3. Select "Don't optimize"
+
+This ensures downloads continue even when the screen is off.

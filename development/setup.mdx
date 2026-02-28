@@ -1,0 +1,205 @@
+---
+title: Development Environment Setup
+description: Set up your development environment to contribute to BBPlayer
+---
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed on your system:
+
+<Steps>
+  <Step title="Install Node.js">
+    Install Node.js v18 or higher. We recommend using [nvm](https://github.com/nvm-sh/nvm) or [fnm](https://github.com/Schniz/fnm) for version management.
+    
+    ```bash
+    node --version  # Should be v18.0.0 or higher
+    ```
+  </Step>
+
+  <Step title="Install pnpm">
+    BBPlayer uses pnpm as its package manager. The required version is specified in `package.json`.
+    
+    ```bash
+    npm install -g pnpm@10.26.2
+    ```
+    
+    <Tip>
+      The `packageManager` field in package.json specifies `pnpm@10.26.2`. Using the exact version ensures consistent dependency resolution across the team.
+    </Tip>
+  </Step>
+
+  <Step title="Set up Android development (Required)">
+    BBPlayer is primarily developed for Android. Follow the [React Native environment setup guide](https://reactnative.dev/docs/environment-setup) for Android development.
+    
+    **Required:**
+    - Android Studio
+    - Android SDK (API 34 or higher recommended)
+    - Java Development Kit (JDK 17)
+    - Android emulator or physical device
+    
+    <Note>
+      Make sure to set up the `ANDROID_HOME` environment variable pointing to your Android SDK location.
+    </Note>
+  </Step>
+
+  <Step title="Set up iOS development (Optional)">
+    iOS support is not actively maintained but basic compatibility exists.
+    
+    <Warning>
+      iOS development is currently not in sync with Android. The project focuses on Android, so iOS builds may not compile successfully.
+    </Warning>
+    
+    If you want to attempt iOS development:
+    - macOS with Xcode 15+
+    - CocoaPods
+    - iOS Simulator or physical device
+  </Step>
+</Steps>
+
+## Clone the Repository
+
+Clone the BBPlayer repository from GitHub:
+
+```bash
+git clone https://github.com/bbplayer-app/bbplayer.git
+cd bbplayer
+```
+
+## Install Dependencies
+
+BBPlayer is a monorepo managed with pnpm workspaces. Install all dependencies from the root:
+
+```bash
+pnpm install
+```
+
+This command will:
+- Install dependencies for all workspace packages
+- Set up git hooks using Lefthook (via the `postinstall` script)
+- Apply any necessary patches via `patch-package` in the mobile app
+
+<Note>
+  Lefthook is automatically installed via the `postinstall` script. It manages git hooks for code quality checks including commitlint for commit message validation.
+</Note>
+
+## Development Tools
+
+### Code Quality Tools
+
+BBPlayer uses several tools to maintain code quality:
+
+#### Linting
+
+<CodeGroup>
+```bash Run linters
+pnpm lint
+```
+
+```bash Auto-fix issues
+pnpm lint:fix
+```
+</CodeGroup>
+
+The project uses:
+- **oxlint** - Fast linter with type-aware checking
+- **ESLint** - JavaScript/TypeScript linting with custom BBPlayer rules
+
+#### Formatting
+
+```bash
+pnpm format
+```
+
+Uses **oxfmt** to format code consistently across the project.
+
+#### Dependency Management
+
+<CodeGroup>
+```bash Check for mismatches
+pnpm check:deps
+```
+
+```bash Fix mismatches
+pnpm fix:deps
+```
+</CodeGroup>
+
+Uses **syncpack** to ensure consistent dependency versions across workspace packages.
+
+## Start Development Server
+
+Navigate to the mobile app directory and start the Expo development server:
+
+```bash
+cd apps/mobile
+pnpm start
+```
+
+This runs with:
+- `WITH_ROZENITE=true` - Enables Rozenite metro plugins for enhanced development
+- `APP_VARIANT=development` - Sets the app variant to development mode
+
+### Run on Android
+
+To build and run the app on an Android device or emulator:
+
+```bash
+cd apps/mobile
+pnpm android
+```
+
+This will:
+1. Build the Android app
+2. Install it on your connected device/emulator
+3. Start the Metro bundler
+
+<Tip>
+  Make sure you have an Android emulator running or a physical device connected via USB debugging before running this command.
+</Tip>
+
+## Environment Variables
+
+BBPlayer uses environment variables for configuration. The mobile app uses `APP_VARIANT` to control build variants:
+
+- `development` - Development builds with debugging enabled
+- `preview` - Preview builds for internal testing
+- `production` - Production builds for release
+
+<Note>
+  Firebase and Sentry configurations require API keys. For development, these services can be disabled or you'll need to set up your own instances.
+</Note>
+
+## Protobuf Generation
+
+The mobile app uses Protocol Buffers for Bilibili API communication. If you modify `.proto` files, regenerate the code:
+
+```bash
+cd apps/mobile
+pnpm prepare
+```
+
+This runs:
+- `pbjs` - Generates static JavaScript modules from `.proto` files
+- `pbts` - Generates TypeScript definitions
+
+## Testing
+
+Run tests in the mobile app:
+
+```bash
+cd apps/mobile
+pnpm test
+```
+
+Uses Jest with the `jest-expo` preset for React Native testing.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Project Structure" icon="folder-tree" href="/development/project-structure">
+    Learn about the monorepo structure and how code is organized
+  </Card>
+  <Card title="Building for Production" icon="hammer" href="/development/building">
+    Build APKs for Android and iOS (if supported)
+  </Card>
+</CardGroup>

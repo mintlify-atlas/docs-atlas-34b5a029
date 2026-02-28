@@ -1,0 +1,284 @@
+---
+title: Project Structure
+description: Understanding BBPlayer's monorepo architecture and code organization
+---
+
+## Monorepo Overview
+
+BBPlayer is organized as a **pnpm workspace monorepo** with multiple apps and shared packages. This structure promotes code reuse and maintains consistency across the project.
+
+```
+bbplayer/
+├── apps/              # Applications
+│   ├── mobile/       # React Native mobile app
+│   ├── backend/      # Backend API (Cloudflare Worker)
+│   └── docs/         # Documentation site (this site!)
+├── packages/         # Shared libraries
+│   ├── orpheus/             # Audio player module
+│   ├── splash/              # Lyrics parser
+│   ├── logs/                # Logging library
+│   ├── image-theme-colors/  # Theme color extraction
+│   └── eslint-plugin/       # Custom ESLint rules
+└── package.json      # Root workspace configuration
+```
+
+## Apps Directory
+
+The `apps/` directory contains the main applications in the BBPlayer ecosystem.
+
+### Mobile App (`apps/mobile`)
+
+The core React Native application built with Expo.
+
+<Accordion title="Mobile App Structure">
+```
+apps/mobile/
+├── src/
+│   ├── app/              # Expo Router pages and navigation
+│   ├── assets/           # Static assets (fonts, images)
+│   ├── components/       # Reusable React components
+│   ├── features/         # Feature-specific modules
+│   ├── hooks/            # Custom React hooks
+│   ├── lib/              # Third-party integrations & APIs
+│   ├── theme/            # Material Design 3 theming
+│   ├── types/            # TypeScript type definitions
+│   └── utils/            # Utility functions
+├── assets/              # App assets (icon, splash screen)
+├── drizzle/             # Database migrations
+├── expo-plugins/        # Custom Expo config plugins
+├── app.config.ts        # Expo app configuration
+├── babel.config.js      # Babel configuration
+├── metro.config.js      # Metro bundler configuration
+├── drizzle.config.ts    # Drizzle ORM configuration
+└── package.json
+```
+</Accordion>
+
+**Key Technologies:**
+- **Framework**: Expo 55 (preview), React Native 0.83.1, React 19.2.0
+- **Routing**: Expo Router (file-based routing)
+- **State Management**: Zustand for global state
+- **Data Fetching**: TanStack React Query (v5.90.19)
+- **UI Library**: React Native Paper (Material Design 3)
+- **Database**: SQLite with Drizzle ORM
+- **Storage**: MMKV for fast key-value storage
+- **Audio Playback**: `@bbplayer/orpheus` (custom Media3 wrapper)
+- **Lyrics**: `@bbplayer/splash` (SPL format support)
+
+<Note>
+  The mobile app uses **Expo Router** for navigation with file-based routing in the `src/app/` directory.
+</Note>
+
+### Backend (`apps/backend`)
+
+A lightweight backend API built with Hono and deployed on Cloudflare Workers.
+
+```
+apps/backend/
+├── src/              # API routes and logic
+├── drizzle.config.ts # Database configuration
+├── wrangler.toml     # Cloudflare Worker config
+└── package.json
+```
+
+**Purpose:**
+- Proxy for Bilibili API requests
+- User data synchronization
+- Analytics aggregation
+
+### Docs (`apps/docs`)
+
+The documentation site you're reading right now, built with Mintlify.
+
+```
+apps/docs/
+├── api-reference/   # API documentation
+├── development/     # Developer guides
+├── features/        # Feature documentation
+└── mint.json        # Mintlify configuration
+```
+
+## Packages Directory
+
+Shared libraries used across the monorepo.
+
+### @bbplayer/orpheus
+
+**Custom Expo module for audio playback** based on Android Media3.
+
+```
+packages/orpheus/
+├── src/              # TypeScript/React Native code
+├── android/          # Kotlin native module (Media3)
+├── ios/              # Swift native module (AVFoundation)
+└── expo-module.config.json
+```
+
+**Key Features:**
+- Media3 ExoPlayer integration for Android
+- Background playback support
+- Audio focus management
+- Playback queue management
+- Loudness equalization (ReplayGain support)
+
+<Tip>
+  Orpheus is the audio engine powering BBPlayer's playback experience. It wraps Android's Media3 library for robust audio playback.
+</Tip>
+
+### @bbplayer/splash
+
+**Lyrics parsing and conversion library** supporting the SPL format.
+
+```
+packages/splash/
+├── src/
+│   └── index.ts      # Lyrics parser implementation
+└── package.json
+```
+
+**Features:**
+- Parse LRC and SPL (Synchronized Lyrics) formats
+- Word-by-word synchronization
+- Romaji annotation support
+- Translation lyrics support
+
+<Note>
+  SPL is BBPlayer's custom lyrics format supporting advanced features like word-level timing and furigana. Learn more at [bbplayer.roitium.com/SPL](https://bbplayer.roitium.com/SPL).
+</Note>
+
+### @bbplayer/logs
+
+**Performance-aware logging library** for React Native.
+
+```
+packages/logs/
+├── src/
+│   └── index.ts      # Logger implementation
+└── package.json
+```
+
+**Features:**
+- Namespace-based logging
+- Custom log levels
+- Custom transports (console, file)
+- Colored console output
+- Performance-optimized for production
+
+### @bbplayer/image-theme-colors
+
+**Expo module for theme color extraction** from images.
+
+```
+packages/image-theme-colors/
+├── src/              # TypeScript API
+├── android/          # Kotlin implementation
+├── ios/              # Swift implementation
+└── expo-module.config.json
+```
+
+**Purpose:**
+- Extract dominant colors from album covers
+- Generate Material You (Monet) color palettes
+- Support dynamic theming based on artwork
+
+### @bbplayer/eslint-plugin
+
+**Custom ESLint rules** specific to BBPlayer's coding standards.
+
+```
+packages/eslint-plugin/
+├── src/              # ESLint rule definitions
+└── package.json
+```
+
+## Configuration Files
+
+### Root Level
+
+- **`package.json`** - Root workspace configuration with shared dev scripts
+- **`pnpm-workspace.yaml`** - Workspace definition
+- **`tsconfig.json`** - TypeScript project references
+- **`eslint.config.mjs`** - ESLint configuration
+- **`.oxlintrc.json`** - oxlint configuration
+- **`.oxfmtrc.json`** - oxfmt formatter configuration
+- **`lefthook.yml`** - Git hooks configuration
+- **`commitlint.config.js`** - Commit message linting
+- **`.syncpackrc`** - Dependency version synchronization
+
+<Tip>
+  Lefthook manages git hooks for pre-commit checks. It runs linters and formatters automatically before commits.
+</Tip>
+
+### Mobile App Config
+
+- **`app.config.ts`** - Dynamic Expo configuration
+- **`eas.json`** - Expo Application Services build profiles
+- **`metro.config.js`** - Metro bundler with Rozenite plugins
+- **`babel.config.js`** - Babel with React Compiler plugin
+- **`drizzle.config.ts`** - Database ORM configuration
+
+## Development Workflow
+
+### Workspace Commands
+
+Run commands from the root directory:
+
+<CodeGroup>
+```bash Lint all packages
+pnpm lint
+```
+
+```bash Format all files
+pnpm format
+```
+
+```bash Check dependencies
+pnpm check:deps
+```
+</CodeGroup>
+
+### Package-Specific Commands
+
+Run commands in specific packages:
+
+<CodeGroup>
+```bash Mobile app
+cd apps/mobile
+pnpm start
+pnpm android
+```
+
+```bash Test packages
+cd packages/splash
+pnpm test
+```
+</CodeGroup>
+
+<Warning>
+  Always run `pnpm install` from the **root directory**, not from individual packages. This ensures proper workspace linking.
+</Warning>
+
+## TypeScript Configuration
+
+The project uses **TypeScript project references** for better build performance and type checking.
+
+Root `tsconfig.json` references:
+- `apps/mobile/tsconfig.json`
+- `apps/docs/tsconfig.json`
+- `packages/*/tsconfig.json`
+
+This allows:
+- Incremental builds
+- Cross-package type checking
+- Better IDE performance
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Development Setup" icon="screwdriver-wrench" href="/development/setup">
+    Set up your development environment
+  </Card>
+  <Card title="Building for Production" icon="hammer" href="/development/building">
+    Learn how to build production APKs
+  </Card>
+</CardGroup>

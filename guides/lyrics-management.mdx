@@ -1,0 +1,274 @@
+---
+title: Lyrics Management
+description: Search, download, adjust, and display lyrics in BBPlayer with support for multiple sources
+---
+
+BBPlayer provides intelligent lyrics management with automatic matching, manual search, offset adjustment, and desktop lyrics support on Android. This guide covers all lyrics features.
+
+## How Lyrics Work
+
+BBPlayer uses a smart caching system that:
+
+1. **Checks local cache first**: Lyrics are stored in `lyrics/` directory as JSON files
+2. **Auto-fetches from multiple sources**: Searches Netease, QQ Music, and Kugou simultaneously
+3. **Returns the fastest match**: Uses `Promise.any()` to return the first successful result
+4. **Caches for offline use**: Downloaded lyrics remain available offline
+
+<Note>
+  Lyrics are stored in **SPL format** (Simple Parsed Lyrics) with support for original lyrics (`lrc`), translated lyrics (`tlyric`), and romanization (`romalrc`).
+</Note>
+
+## Automatic Lyrics Matching
+
+When you play a track, BBPlayer automatically:
+
+<Steps>
+  <Step title="Extracts Keywords">
+    Cleans the track title to extract the core song name by:
+    - Prioritizing text within `《》` or `「」` brackets
+    - Removing decorative text in `【】` or `""` quotes
+    - Trimming whitespace
+  </Step>
+  
+  <Step title="Searches Multiple Sources">
+    Queries three lyric providers in parallel:
+    - **Netease Cloud Music** (网易云音乐)
+    - **QQ Music** (QQ 音乐)
+    - **Kugou Music** (酷狗音乐)
+    
+    Each source matches based on:
+    - Song title similarity
+    - Duration matching (allows ±3 second tolerance)
+    - Artist name matching
+  </Step>
+  
+  <Step title="Returns Best Match">
+    The first provider to return a successful match is used. Results are cached locally for instant playback next time.
+  </Step>
+</Steps>
+
+### Special Handling for Bilibili Tracks
+
+For videos with music metadata, BBPlayer:
+
+1. Calls Bilibili's `web-interface/player/v2` API
+2. Extracts the `bgm_info.music_title` field
+3. Uses this precise music name for lyrics search instead of the video title
+
+This significantly improves match accuracy for music videos.
+
+## Configuring Lyrics Source
+
+You can control which provider is used for automatic matching:
+
+<Steps>
+  <Step title="Open Lyrics Settings">
+    Navigate to **Settings** → **Lyrics** (设置 → 歌词).
+  </Step>
+  
+  <Step title="Select Lyric Source">
+    Tap the menu next to **自动匹配的歌词源** (Auto-match lyric source) and choose:
+    
+    - **网易云音乐** (Netease Cloud Music): Preferred for Chinese pop music
+    - **QQ 音乐** (QQ Music): Good for Mandopop and Cantopop
+    - **酷狗音乐** (Kugou Music): Wide variety of genres
+    - **自动** (Auto): Uses the fastest responding source
+    
+    <Tip>
+      "Auto" mode doesn't guarantee the best match - it just returns the quickest result. For best accuracy, manually select your preferred source.
+    </Tip>
+  </Step>
+</Steps>
+
+## Manual Lyrics Search
+
+If automatic matching fails or provides incorrect lyrics:
+
+<Steps>
+  <Step title="Open Lyrics Control">
+    While playing a track, tap the lyrics area to open the lyrics overlay.
+  </Step>
+  
+  <Step title="Access Search">
+    Tap the search icon (🔍) in the top-right corner.
+  </Step>
+  
+  <Step title="Enter Search Query">
+    Type the song name or artist. The search queries all three lyric sources and displays results with:
+    - Song title
+    - Artist name
+    - Duration
+    - Source platform icon
+  </Step>
+  
+  <Step title="Select Correct Lyrics">
+    Tap the matching result. BBPlayer will:
+    - Download the lyrics
+    - Save to cache
+    - Display immediately
+  </Step>
+</Steps>
+
+## Adjusting Lyrics Timing
+
+If lyrics are out of sync with the audio:
+
+### Using the Offset Control
+
+1. Open the lyrics overlay during playback
+2. Tap the offset adjustment button (⏱️)
+3. Use **+** and **-** buttons to shift timing:
+   - Each tap adjusts by 0.5 seconds
+   - Positive values delay lyrics (use if lyrics are ahead)
+   - Negative values advance lyrics (use if lyrics are behind)
+4. The offset is saved to the lyric cache file under `misc.userOffset`
+
+<Accordion title="How lyrics timing works">
+  Lyrics files contain timestamps in milliseconds for each line. The user offset is added to each timestamp during rendering. This offset is persisted in the cached JSON file, so it applies every time you play the track.
+</Accordion>
+
+## Lyrics Display Styles
+
+BBPlayer offers multiple lyrics visualization options:
+
+### Enable Verbatim Lyrics
+
+<Steps>
+  <Step title="Go to Lyrics Settings">
+    Navigate to **Settings** → **Lyrics**.
+  </Step>
+  
+  <Step title="Toggle Verbatim Mode">
+    Enable **显示逐字歌词** (Display verbatim lyrics).
+  </Step>
+</Steps>
+
+When enabled, lyrics animate word-by-word with spring animations for a karaoke-style effect.
+
+### Old School Lyrics Style
+
+To use the classic center-aligned lyrics display:
+
+1. Go to **Settings** → **Lyrics**
+2. Enable **恢复旧版歌词样式** (Restore old-style lyrics)
+
+This switches from the modern card-based layout to a simpler, centered text style.
+
+## Desktop Lyrics (Android Only)
+
+Display synchronized lyrics over other apps:
+
+<Steps>
+  <Step title="Enable Overlay Permission">
+    Go to **Settings** → **Lyrics** → **桌面歌词** (Desktop Lyrics).
+    
+    When prompted, grant the "Display over other apps" permission in Android settings.
+  </Step>
+  
+  <Step title="Show Desktop Lyrics">
+    Toggle **桌面歌词** to ON. Lyrics will appear as a floating overlay starting with the next track.
+  </Step>
+  
+  <Step title="Lock/Unlock Position">
+    Enable **桌面歌词锁定** (Desktop Lyrics Lock) to prevent accidental movement.
+    
+    When unlocked, you can drag the lyrics window anywhere on screen.
+  </Step>
+</Steps>
+
+<Note>
+  Desktop lyrics require the `SYSTEM_ALERT_WINDOW` permission. The overlay automatically hides when you close the app or stop playback.
+</Note>
+
+## Lyrics File Format
+
+Lyrics are cached as JSON files in this structure:
+
+```json
+{
+  "id": "bilibili::BV1xx::123456",
+  "updateTime": 1234567890,
+  "lrc": "[00:12.50]First line\n[00:15.00]Second line",
+  "tlyric": "[00:12.50]Translation line 1\n[00:15.00]Translation line 2",
+  "romalrc": "[00:12.50]Romanization line 1",
+  "misc": {
+    "userOffset": 0.5
+  }
+}
+```
+
+- **`id`**: Track's unique key
+- **`lrc`**: Original lyrics in LRC format
+- **`tlyric`**: Translated lyrics (optional)
+- **`romalrc`**: Romanized lyrics (optional, for Japanese/Korean songs)
+- **`misc.userOffset`**: User-adjusted timing offset in seconds
+
+## Clearing Lyrics Cache
+
+To free up storage or force re-download of lyrics:
+
+1. Go to **Settings** → **General**
+2. Tap **清除歌词缓存** (Clear Lyrics Cache)
+3. Confirm the action
+
+This deletes all cached lyric files but preserves your offset adjustments if you re-download the same lyrics.
+
+## Lyrics Migration
+
+BBPlayer automatically migrates older lyric formats on first launch:
+
+- Old format used `raw` and `rawOriginalLyrics` fields
+- New format uses `lrc`, `tlyric`, `romalrc` in SPL format
+- User offsets are preserved during migration
+- A `.migration_v2_done` marker prevents redundant migrations
+
+<Tip>
+  If you notice missing lyrics after an update, try clearing the lyrics cache and letting the app re-download them in the new format.
+</Tip>
+
+## Troubleshooting
+
+<Accordion title="No lyrics found for my track">
+  **Possible solutions:**
+  
+  1. Try manual search with different keywords
+  2. Switch lyric source in settings (different providers have different catalogs)
+  3. For Bilibili tracks, ensure the video has proper music metadata
+  4. Check your network connection
+  5. Some rare or independent tracks may not be in any lyric database
+</Accordion>
+
+<Accordion title="Lyrics are significantly out of sync">
+  **Possible causes:**
+  
+  1. Wrong lyrics match (similar song with different duration)
+  2. Audio source has intro/silence that shifts timing
+  
+  **Solutions:**
+  
+  1. Use manual search to find the correct version
+  2. Adjust offset - for major mismatches (>5 seconds), the lyrics are likely wrong
+  3. Delete cached lyrics and try a different source
+</Accordion>
+
+<Accordion title="Desktop lyrics not appearing (Android)">
+  **Checklist:**
+  
+  1. Ensure overlay permission is granted
+  2. Check that desktop lyrics toggle is ON in settings
+  3. Restart the track (desktop lyrics activate on track change)
+  4. Some Android ROMs restrict overlays - check manufacturer settings
+  5. Background restrictions may prevent the overlay service - whitelist BBPlayer
+</Accordion>
+
+<Accordion title="Translated lyrics not showing">
+  Not all lyrics have translations. Translated lyrics are only available when the source provider includes them (common for Chinese songs with English translations or Japanese songs with Chinese translations).
+</Accordion>
+
+## Best Practices
+
+1. **Select a primary source**: Instead of "Auto" mode, choose the provider that works best for your music taste
+2. **Adjust offset once**: Most tracks from the same album will have similar timing issues
+3. **Use manual search for covers**: Cover versions often have different durations than originals
+4. **Lock desktop lyrics**: Prevent accidental repositioning during use
+5. **Periodically clear cache**: If experiencing sync issues across many tracks, clearing and re-downloading can help
