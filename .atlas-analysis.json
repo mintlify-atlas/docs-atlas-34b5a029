@@ -1,0 +1,123 @@
+{
+  "projectType": "saas",
+  "projectName": "BBPlayer",
+  "projectDescription": "A local-first Bilibili audio player built with React Native for a lightweight and smooth music listening experience.",
+  "theme": "almond",
+  "primaryColor": "#00A1D6",
+  "lightColor": "#00C3FF",
+  "darkColor": "#0087BD",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/bilibili-login",
+              "features/playback",
+              "features/lyrics",
+              "features/download",
+              "features/import-playlists"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/creating-playlists",
+              "guides/lyrics-management",
+              "guides/offline-playback",
+              "guides/customization"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "architecture/overview",
+              "architecture/monorepo",
+              "architecture/tech-stack"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Packages",
+        "groups": [
+          {
+            "group": "Audio Player",
+            "pages": [
+              "packages/orpheus/overview",
+              "packages/orpheus/features",
+              "packages/orpheus/api"
+            ]
+          },
+          {
+            "group": "Lyrics System",
+            "pages": [
+              "packages/splash/overview",
+              "packages/splash/spl-format",
+              "packages/splash/api"
+            ]
+          },
+          {
+            "group": "Utilities",
+            "pages": [
+              "packages/image-theme-colors",
+              "packages/logs"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Development",
+        "groups": [
+          {
+            "group": "Contributing",
+            "pages": [
+              "development/setup",
+              "development/project-structure",
+              "development/building"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "resources/privacy",
+              "resources/faq",
+              "resources/changelog"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Bilibili login via QR code or cookie authentication",
+    "Local-first playlist management with cloud sync support",
+    "Import playlists from NetEase Cloud Music and QQ Music",
+    "Full-featured audio player with loudness equalization and gapless playback",
+    "SPL lyrics format with word-by-word progress and translations",
+    "Download and offline playback with metadata export",
+    "Material Design 3 UI with light/dark themes and monet color extraction",
+    "Desktop lyrics (floating window) on Android",
+    "Play history statistics and leaderboard"
+  ],
+  "publicApiSurface": [
+    "@bbplayer/orpheus - Audio playback module",
+    "@bbplayer/splash - Lyrics parser and converter",
+    "@bbplayer/image-theme-colors - Cover color extraction",
+    "@bbplayer/logs - Logging utilities",
+    "ExpoOrpheusModule - Native audio player bridge",
+    "parseLRC() - LRC lyrics parser",
+    "parseSPL() - SPL lyrics parser",
+    "convertNeteaseToSPL() - NetEase lyrics converter"
+  ]
+}
